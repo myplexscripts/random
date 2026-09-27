@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en-CA">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#f4f5f2">
+  <meta name="description" content="Unofficial Ontario ESA severance package checker for hourly Starbucks partners.">
+  <title>Starbucks Partner Severance Check</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="page-header">
+      <div>
+        <h1>Starbucks Partner Severance Check</h1>
+        <p>Ontario hourly partners</p>
+      </div>
+      <span class="status-pill">Unofficial</span>
+    </header>
+
+    <div class="notice">
+      This tool estimates Ontario ESA minimums and helps you compare them with the amounts in your Starbucks paperwork. It does not determine common-law entitlement or tell you whether to sign.
+    </div>
+
+    <form id="severanceForm" novalidate>
+      <section class="card">
+        <div class="section-heading">
+          <div class="step">1</div>
+          <div>
+            <h2>Your employment</h2>
+            <p>Start with the dates and employer shown on your paperwork.</p>
+          </div>
+        </div>
+
+        <div class="field-grid">
+          <label class="field field-wide">
+            <span>Employer on your pay statement</span>
+            <select id="employer">
+              <option value="starbucks">Starbucks Coffee Canada, Inc.</option>
+              <option value="licensed">Another company at a licensed Starbucks location</option>
+              <option value="unknown">I am not sure</option>
+            </select>
+          </label>
+
+          <label class="field">
+            <span>Starbucks hire date</span>
+            <input id="hireDate" type="date" required>
+          </label>
+
+          <label class="field">
+            <span>Last day / termination date</span>
+            <input id="terminationDate" type="date" required>
+          </label>
+
+          <label class="field">
+            <span>Date written notice was given</span>
+            <input id="noticeDate" type="date">
+            <small>Leave blank if you were told your employment ended immediately.</small>
+          </label>
+
+          <label class="field">
+            <span>Current hourly wage</span>
+            <div class="money-input">
+              <span>$</span>
+              <input id="hourlyRate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="27.69">
+            </div>
+          </label>
+        </div>
+
+        <div class="field-stack">
+          <fieldset class="choice-group">
+            <legend>Did Starbucks offer you another position before your employment ended?</legend>
+            <div class="segmented">
+              <label><input type="radio" name="transfer" value="no" checked><span>No</span></label>
+              <label><input type="radio" name="transfer" value="accepted"><span>Yes, accepted</span></label>
+              <label><input type="radio" name="transfer" value="declined"><span>Yes, declined</span></label>
+              <label><input type="radio" name="transfer" value="unknown"><span>Not sure</span></label>
+            </div>
+          </fieldset>
+
+          <fieldset class="choice-group">
+            <legend>Did you receive a Form 1 or written mass-termination notice?</legend>
+            <div class="segmented">
+              <label><input type="radio" name="mass" value="no" checked><span>No</span></label>
+              <label><input type="radio" name="mass" value="yes"><span>Yes</span></label>
+              <label><input type="radio" name="mass" value="unknown"><span>Not sure</span></label>
+            </div>
+          </fieldset>
+
+          <div id="massDetails" class="conditional hidden">
+            <label class="field">
+              <span>Employees covered by the mass termination</span>
+              <select id="massCount">
+                <option value="">Choose from the notice</option>
+                <option value="8">50 to 199 employees</option>
+                <option value="12">200 to 499 employees</option>
+                <option value="16">500 or more employees</option>
+              </select>
+            </label>
+            <p class="helper">Only use this if the paperwork confirms Ontario's mass-termination rules apply. Otherwise the tool uses your individual notice period.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <div class="step">2</div>
+          <div>
+            <h2>Regular wages before notice</h2>
+            <p>Used to estimate termination pay for a partner whose weekly hours vary.</p>
+          </div>
+        </div>
+
+        <div class="reference-box">
+          <strong id="terminationReferenceLabel">Reference period</strong>
+          <p>Enter regular wages for each week you worked in the 12 weeks immediately before written notice was given. If there was no notice, use the 12 weeks before termination.</p>
+        </div>
+
+        <div class="entry-mode">
+          <span>Enter each week using</span>
+          <div class="segmented compact">
+            <label><input type="radio" name="terminationMode" value="wages" checked><span>Regular wages</span></label>
+            <label><input type="radio" name="terminationMode" value="hours"><span>Hours</span></label>
+          </div>
+        </div>
+
+        <div id="terminationWeeks" class="weeks-list"></div>
+
+        <div class="average-line">
+          <span>Estimated regular weekly wage</span>
+          <strong id="terminationAverage">$0.00</strong>
+        </div>
+        <p class="helper">Weeks with no work are excluded from the average. Regular wages exclude items such as overtime pay, vacation pay, public holiday pay, premium pay, termination pay and severance pay.</p>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <div class="step">3</div>
+          <div>
+            <h2>Regular wages before severance</h2>
+            <p>Used separately for Ontario ESA severance pay.</p>
+          </div>
+        </div>
+
+        <div class="reference-box">
+          <strong id="severanceReferenceLabel">Reference period</strong>
+          <p>Enter regular wages for each week you worked in the 12 weeks immediately before your employment was severed.</p>
+        </div>
+
+        <div class="copy-row">
+          <button id="copyTerminationWeeks" class="secondary-button" type="button">Copy the 12 weeks above</button>
+          <span>Use this when both reference periods contain the same worked weeks.</span>
+        </div>
+
+        <div class="entry-mode">
+          <span>Enter each week using</span>
+          <div class="segmented compact">
+            <label><input type="radio" name="severanceMode" value="wages" checked><span>Regular wages</span></label>
+            <label><input type="radio" name="severanceMode" value="hours"><span>Hours</span></label>
+          </div>
+        </div>
+
+        <div id="severanceWeeks" class="weeks-list"></div>
+
+        <div class="average-line">
+          <span>Estimated regular weekly wage</span>
+          <strong id="severanceAverage">$0.00</strong>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="section-heading">
+          <div class="step">4</div>
+          <div>
+            <h2>What Starbucks says it is paying</h2>
+            <p>Copy the amounts from the severance package. Leave anything you do not see blank.</p>
+          </div>
+        </div>
+
+        <div class="offer-grid">
+          <label class="field">
+            <span>Termination pay</span>
+            <div class="money-input"><span>$</span><input id="offerTermination" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+          <label class="field">
+            <span>Vacation pay on termination pay</span>
+            <div class="money-input"><span>$</span><input id="offerTerminationVacation" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+          <label class="field">
+            <span>ESA severance pay</span>
+            <div class="money-input"><span>$</span><input id="offerSeverance" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+          <label class="field">
+            <span>Outstanding vacation</span>
+            <div class="money-input"><span>$</span><input id="offerVacation" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+          <label class="field">
+            <span>Unpaid wages / other wages owed</span>
+            <div class="money-input"><span>$</span><input id="offerWages" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+          <label class="field">
+            <span>Additional / enhanced payment</span>
+            <div class="money-input"><span>$</span><input id="offerEnhanced" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+          <label class="field">
+            <span>Other cash payment</span>
+            <div class="money-input"><span>$</span><input id="offerOther" type="number" min="0" step="0.01" inputmode="decimal"></div>
+          </label>
+        </div>
+
+        <fieldset class="choice-group top-gap">
+          <legend>Does Starbucks require a Full and Final Release for the additional payment?</legend>
+          <div class="segmented">
+            <label><input type="radio" name="release" value="yes"><span>Yes</span></label>
+            <label><input type="radio" name="release" value="no"><span>No</span></label>
+            <label><input type="radio" name="release" value="unknown" checked><span>Not sure</span></label>
+          </div>
+        </fieldset>
+
+        <fieldset class="choice-group">
+          <legend>Does the package say when your benefits end?</legend>
+          <div class="segmented">
+            <label><input type="radio" name="benefits" value="yes"><span>Yes</span></label>
+            <label><input type="radio" name="benefits" value="no"><span>No</span></label>
+            <label><input type="radio" name="benefits" value="unknown" checked><span>Not sure</span></label>
+          </div>
+        </fieldset>
+      </section>
+
+      <div class="calculate-bar">
+        <button id="calculateButton" class="primary-button" type="submit">Check my package</button>
+        <button id="exampleButton" class="secondary-button" type="button">Load example</button>
+      </div>
+    </form>
+
+    <section id="results" class="results hidden" aria-live="polite">
+      <div class="results-header">
+        <div>
+          <span class="eyebrow">Your estimate</span>
+          <h2>What the numbers appear to mean</h2>
+        </div>
+        <button id="printButton" class="secondary-button" type="button">Print / save PDF</button>
+      </div>
+
+      <div id="criticalFlags" class="flags"></div>
+
+      <div class="comparison-grid">
+        <article class="result-card">
+          <span class="result-label">Estimated ESA termination-related minimum</span>
+          <strong id="estimatedFloor">$0.00</strong>
+          <p id="estimatedFloorDetail"></p>
+        </article>
+        <article class="result-card">
+          <span class="result-label">Starbucks package total entered</span>
+          <strong id="starbucksTotal">$0.00</strong>
+          <p>Sum of the cash amounts you copied from the paperwork.</p>
+        </article>
+        <article class="result-card emphasized">
+          <span class="result-label">Additional / enhanced amount</span>
+          <strong id="enhancedAmount">$0.00</strong>
+          <p id="enhancedDetail">Check whether this amount is conditional on signing a release.</p>
+        </article>
+      </div>
+
+      <div class="breakdown">
+        <h3>Estimated ESA breakdown</h3>
+        <div class="breakdown-row"><span>Regular weekly wage for termination pay</span><strong id="resultTerminationWeekly">$0.00</strong></div>
+        <div class="breakdown-row"><span>Required notice period</span><strong id="resultNoticeWeeks">0 weeks</strong></div>
+        <div class="breakdown-row"><span>Working notice provided</span><strong id="resultWorkingNotice">0 weeks</strong></div>
+        <div class="breakdown-row"><span>Estimated termination pay</span><strong id="resultTerminationPay">$0.00</strong></div>
+        <div class="breakdown-row"><span>Vacation pay on termination pay</span><strong id="resultTerminationVacation">$0.00</strong></div>
+        <div class="breakdown-row"><span>Regular weekly wage for ESA severance</span><strong id="resultSeveranceWeekly">$0.00</strong></div>
+        <div class="breakdown-row"><span>ESA severance service used</span><strong id="resultService">0 years</strong></div>
+        <div class="breakdown-row"><span>Estimated ESA severance pay</span><strong id="resultSeverancePay">$0.00</strong></div>
+      </div>
+
+      <div class="signing-comparison">
+        <h3>Before signing</h3>
+        <div class="signing-grid">
+          <div>
+            <span>Estimated termination-related ESA minimum</span>
+            <strong id="withoutSigning">$0.00</strong>
+            <p>This is the calculator's ESA estimate. Statutory amounts cannot be made conditional on signing a release.</p>
+          </div>
+          <div>
+            <span>Package total if all entered amounts are paid</span>
+            <strong id="withSigning">$0.00</strong>
+            <p id="withSigningNote">Review the release to identify which amounts, if any, are conditional on signing.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="package-check">
+        <h3>Check your Starbucks paperwork for</h3>
+        <div id="checklist" class="checklist"></div>
+      </div>
+
+      <div class="questions">
+        <h3>Questions worth asking</h3>
+        <div id="questionsList"></div>
+      </div>
+
+      <div class="source-note">
+        <strong>What this tool does not calculate</strong>
+        <p>It does not determine whether a Starbucks employment agreement limits common-law notice, whether a termination clause is enforceable, whether an alternative job offer was legally reasonable, or whether you have a wrongful dismissal claim.</p>
+      </div>
+    </section>
+
+    <section class="sources">
+      <h2>Ontario sources used</h2>
+      <a href="https://www.ontario.ca/document/your-guide-employment-standards-act-0/termination-employment" target="_blank" rel="noreferrer">Termination of employment</a>
+      <a href="https://www.ontario.ca/document/your-guide-employment-standards-act-0/severance-pay" target="_blank" rel="noreferrer">Severance pay</a>
+      <a href="https://www.ontario.ca/document/your-guide-employment-standards-act-0/job-seeking-leave" target="_blank" rel="noreferrer">Job seeking leave</a>
+      <a href="https://www.ontario.ca/laws/regulation/010288" target="_blank" rel="noreferrer">O. Reg. 288/01</a>
+    </section>
+
+    <footer>
+      Not affiliated with or endorsed by Starbucks. Information entered stays in your browser.
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
