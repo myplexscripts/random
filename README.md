@@ -2,31 +2,33 @@
 
 A simple, unofficial Ontario ESA severance calculator for hourly Starbucks partners.
 
-The interface is intentionally plain and designed for partners with no legal or payroll knowledge.
+## Paystub-first input
 
-## Starbucks-specific assumptions used for the current tool
+The tool is built around the actual Starbucks pay statement layout.
 
-- Biweekly payroll.
-- Pay periods run Monday through Sunday.
-- September 18, 2026 is used as the known payroll-cycle anchor.
-- The pay period associated with that payday is August 31 through September 13, 2026.
-- The calculator groups the required weekly-hour entries into familiar Starbucks two-week pay periods.
+For paid periods, partners copy the **Current** dollar amounts from:
 
-## What partners enter
+- Regular Wage
+- Training
 
-1. Hire date, last day and hourly wage.
-2. Recent weekly hours, grouped by Starbucks pay period.
-3. Whether advance written notice was given.
-4. Whether another Starbucks job was offered.
-5. A few clearly labelled amounts from the severance paperwork.
+The tool tells partners not to use Gross Hrs/Wages, tips, vacation pay, public holiday pay, holiday premium, taxable benefits, NonCash Awards, or deductions.
 
-## Calculation notes
+For a current pay period that has not been paid yet, the partner enters Regular Wage and Training hours and the tool converts them using the current hourly rate.
 
-For variable-hour employees, weeks with no work are excluded from the regular-weekly-wage average. If advance written notice was given, the app asks for a separate 12-week period before the notice date for termination-pay purposes. ESA severance uses the weeks before severance.
+Each Starbucks pay period covers two Monday-to-Sunday weeks. The partner only needs to say whether they actually worked 2, 1, or 0 of those weeks.
 
-The app is an information aid, not legal advice, and does not calculate common-law notice or decide whether a release should be signed.
+## Payroll anchor
+
+The current tool uses September 18, 2026 as the latest known Starbucks payday and August 31 to September 13, 2026 as that pay period. Pay periods are biweekly and run Monday through Sunday.
+
+## Legal calculation
+
+For employees without a regular work week, Ontario uses average regular wages for the weeks actually worked during the relevant 12-week period.
+
+This tool treats Regular Wage and Training as the clearly identifiable regular-wage lines from the Starbucks pay statement. It does not automatically include Sick and Fam because that can require closer review of the worked weeks.
 
 ## Sources
 
 - https://www.ontario.ca/document/your-guide-employment-standards-act-0/termination-employment
 - https://www.ontario.ca/document/your-guide-employment-standards-act-0/severance-pay
+- https://www.ontario.ca/document/employment-standard-act-policy-and-interpretation-manual/part-i-definitions

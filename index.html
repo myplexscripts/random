@@ -10,25 +10,29 @@
 <body>
 <main class="wrap">
   <h1>Starbucks Partner Severance Check</h1>
-  <p class="intro">For hourly Starbucks partners in Ontario. Enter a few details and your recent hours. The calculator does the rest.</p>
+  <p class="intro">For hourly Starbucks partners in Ontario. Use your pay statements and severance paperwork to estimate the ESA minimum.</p>
 
   <div class="note">Unofficial tool. It estimates Ontario ESA minimums only. It does not tell you whether to sign a release or calculate possible common-law entitlement.</div>
 
   <form id="form">
     <section class="card">
       <h2>1. About your job</h2>
+
       <div class="grid">
         <label>
           <span>When did you start at Starbucks?</span>
           <input id="hireDate" type="date" required>
         </label>
+
         <label>
           <span>What is your last day?</span>
           <input id="lastDay" type="date" required>
         </label>
+
         <label>
-          <span>What is your hourly wage?</span>
+          <span>What is your current hourly wage?</span>
           <div class="money"><b>$</b><input id="rate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="27.69" required></div>
+          <small>On your paystub, look at the Rate beside Regular Wage.</small>
         </label>
       </div>
 
@@ -40,7 +44,7 @@
         </div>
       </fieldset>
 
-      <label id="noticeDateWrap" class="hidden">
+      <label id="noticeDateWrap" class="hidden field-gap">
         <span>What date did Starbucks give you written notice?</span>
         <input id="noticeDate" type="date">
       </label>
@@ -56,37 +60,83 @@
     </section>
 
     <section class="card">
-      <h2>2. Enter your recent hours</h2>
-      <p class="small">Enter the hours you actually worked each week. If you did not work at all that week, enter <strong>0</strong>.</p>
-      <div class="pay-help">
-        <strong>Starbucks pays every two weeks.</strong>
-        <span>Pay periods run Monday to Sunday. The most recent payday for this tool is September 18, 2026.</span>
-      </div>
-      <div id="periods"></div>
-      <div class="avg"><span>Your calculated average weekly pay</span><strong id="avgPay">$0.00</strong></div>
+      <h2>2. Use your recent pay statements</h2>
+      <p class="small">For each pay period below, copy the <strong>Current</strong> amount from the two paystub lines shown.</p>
 
-      <p class="tiny">Weeks with 0 hours are left out of the average, as required for variable-hour employees.</p>
+      <div class="stub-guide">
+        <div class="stub-use">
+          <strong>Use these</strong>
+          <span>Regular Wage</span>
+          <span>Training</span>
+        </div>
+        <div class="stub-ignore">
+          <strong>Do not use</strong>
+          <span>Gross Hrs/Wages, tips, Retail Vacat, Retail Holid, Holiday prem, taxable benefits, NonCash Award, deductions</span>
+        </div>
+      </div>
+
+      <div class="pay-help">
+        <strong>Why do we ask how many weeks you worked?</strong>
+        <span>Ontario averages regular wages over the weeks you actually worked. A Starbucks paystub covers two weeks.</span>
+      </div>
+
+      <div id="periods"></div>
+
+      <div class="avg">
+        <span>Your calculated average weekly pay</span>
+        <strong id="avgPay">$0.00</strong>
+      </div>
+
+      <label class="check-row">
+        <input id="hadSickPay" type="checkbox">
+        <span>One of these paystubs has a Current amount beside <strong>Sick and Fam</strong></span>
+      </label>
 
       <div id="noticeHoursCard" class="hidden">
-        <div class="pay-help" style="margin-top:16px">
-          <strong>Because you got advance written notice, we need one more set of hours.</strong>
-          <span>These are the 12 weeks before Starbucks gave you notice. Most partners will never see this section.</span>
+        <div class="pay-help notice-help">
+          <strong>Because you got advance written notice, we need an earlier set of pay statements.</strong>
+          <span>These are the pay periods covering the 12 weeks before Starbucks gave you notice.</span>
         </div>
         <div id="noticePeriods"></div>
-        <div class="avg"><span>Average weekly pay before notice</span><strong id="noticeAvgPay">$0.00</strong></div>
+        <div class="avg">
+          <span>Average weekly pay before notice</span>
+          <strong id="noticeAvgPay">$0.00</strong>
+        </div>
       </div>
     </section>
 
     <section class="card">
-      <h2 id="packageStep">3. What does your Starbucks paperwork say?</h2>
+      <h2>3. What does your Starbucks paperwork say?</h2>
       <p class="small">Only enter amounts you can clearly find. Leave the rest blank.</p>
 
       <div class="package-grid">
-        <label><span>Termination pay</span><div class="money"><b>$</b><input id="offerTermination" type="number" min="0" step="0.01" inputmode="decimal"></div></label>
-        <label><span>ESA severance pay</span><div class="money"><b>$</b><input id="offerSeverance" type="number" min="0" step="0.01" inputmode="decimal"></div></label>
-        <label><span>Extra payment for signing</span><div class="money"><b>$</b><input id="offerExtra" type="number" min="0" step="0.01" inputmode="decimal"></div></label>
-        <label><span>Other cash payment</span><div class="money"><b>$</b><input id="offerOther" type="number" min="0" step="0.01" inputmode="decimal"></div></label>
+        <label>
+          <span>Termination pay</span>
+          <div class="money"><b>$</b><input id="offerTermination" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        </label>
+
+        <label>
+          <span>Vacation pay on termination pay</span>
+          <div class="money"><b>$</b><input id="offerVacation" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        </label>
+
+        <label>
+          <span>ESA severance pay</span>
+          <div class="money"><b>$</b><input id="offerSeverance" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        </label>
+
+        <label>
+          <span>Extra payment for signing</span>
+          <div class="money"><b>$</b><input id="offerExtra" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        </label>
+
+        <label>
+          <span>Other termination payment</span>
+          <div class="money"><b>$</b><input id="offerOther" type="number" min="0" step="0.01" inputmode="decimal"></div>
+        </label>
       </div>
+
+      <p class="tiny">Do not put your normal outstanding vacation balance into these boxes. That is separate from the termination calculation.</p>
 
       <fieldset>
         <legend>Does it ask you to sign a “Full and Final Release”?</legend>
@@ -101,14 +151,28 @@
     <button class="calculate" type="submit">Check my package</button>
   </form>
 
-  <section id="results" class="results hidden">
+  <section id="results" class="results hidden" aria-live="polite">
     <h2>Your result</h2>
     <div id="warnings"></div>
 
     <div class="numbers">
-      <div><span>Estimated ESA minimum</span><strong id="esaTotal">$0.00</strong><small>Termination pay + vacation pay on it + ESA severance</small></div>
-      <div><span>Starbucks cash entered</span><strong id="offerTotal">$0.00</strong><small>Total of the amounts you entered above</small></div>
-      <div class="extra"><span>Extra payment for signing</span><strong id="extraPay">$0.00</strong><small>This is the amount to compare with what the release asks you to give up</small></div>
+      <div>
+        <span>Estimated ESA minimum</span>
+        <strong id="esaTotal">$0.00</strong>
+        <small>Termination pay + vacation pay on it + ESA severance</small>
+      </div>
+
+      <div>
+        <span>Starbucks cash entered</span>
+        <strong id="offerTotal">$0.00</strong>
+        <small>Total of the termination-related amounts you entered</small>
+      </div>
+
+      <div class="extra">
+        <span>Extra payment for signing</span>
+        <strong id="extraPay">$0.00</strong>
+        <small>Compare this with what the release asks you to give up</small>
+      </div>
     </div>
 
     <div class="breakdown">
@@ -116,7 +180,7 @@
 
       <div class="calc-line">
         <span>Average weekly pay</span>
-        <strong id="averageEquation">0 worked hours ÷ 0 worked weeks × $0.00 = $0.00</strong>
+        <strong id="averageEquation">$0.00 ÷ 0 worked weeks = $0.00</strong>
       </div>
 
       <div class="calc-line">
@@ -144,14 +208,6 @@
       <div class="formula-total">
         <span>Estimated ESA minimum</span>
         <strong id="totalEquation">$0.00 + $0.00 + $0.00 = $0.00</strong>
-      </div>
-
-      <div class="hidden" aria-hidden="true">
-        <span id="rWeekly">$0.00</span>
-        <span id="rNotice">0 weeks</span>
-        <span id="rTermination">$0.00</span>
-        <span id="rVacation">$0.00</span>
-        <span id="rSeverance">$0.00</span>
       </div>
     </div>
 
