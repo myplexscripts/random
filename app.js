@@ -109,9 +109,45 @@ function average(prefix){
   var avgH=worked.reduce(function(a,b){return a+b;},0)/worked.length;
   return {hours:avgH,pay:avgH*rate,count:worked.length};
 }
+function updateServiceFormula(){
+  var hire=parseDate($('hireDate').value);
+  var last=parseDate($('lastDay').value);
+  if(!hire||!last||last<hire){
+    $('serviceCalc').textContent='Enter your dates';
+    $('serviceCalcDetail').textContent='We’ll use your length of service to find your Ontario notice period.';
+    return;
+  }
+  var months=fullMonths(hire,last);
+  var years=Math.floor(months/12);
+  var extraMonths=months%12;
+  var weeks=noticeWeeks(months);
+  $('serviceCalc').textContent=years+' years, '+extraMonths+' months → '+weeks+' week'+(weeks===1?'':'s')+' notice';
+  $('serviceCalcDetail').textContent='This is the ESA notice period before subtracting any working notice Starbucks already gave you.';
+}
+
 function updateAverages(){
-  $('avgPay').textContent=money(average('main').pay);
-  $('noticeAvgPay').textContent=money(average('notice').pay);
+  var main=average('main');
+  var notice=average('notice');
+  $('avgPay').textContent=money(main.pay);
+  $('noticeAvgPay').textContent=money(notice.pay);
+
+  if(main.count){
+    $('averageCalc').textContent=main.hours.toFixed(2)+' avg hours × '+money(num('rate'))+' = '+money(main.pay);
+    $('averageCalcDetail').textContent=main.count+' worked week'+(main.count===1?'':'s')+' counted. Weeks with 0 hours are excluded.';
+  }else{
+    $('averageCalc').textContent='Enter your hours';
+    $('averageCalcDetail').textContent='We’ll average only the weeks where you actually worked.';
+  }
+
+  if($('noticeAverageCalc')){
+    if(notice.count){
+      $('noticeAverageCalc').textContent=notice.hours.toFixed(2)+' avg hours × '+money(num('rate'))+' = '+money(notice.pay);
+    }else{
+      $('noticeAverageCalc').textContent='Enter these earlier hours';
+    }
+  }
+
+  updateServiceFormula();
 }
 function rebuild(){
   var last=parseDate($('lastDay').value);
@@ -177,6 +213,15 @@ function calculate(e){
   $('rVacation').textContent=money(vacPay);
   $('rSeverance').textContent=money(severance);
 
+  $('terminationEquation').textContent=money(terminationAvg.pay)+' × '+missing.toFixed(2).replace('.00','')+' weeks = '+money(terminationPay);
+  $('terminationEquationDetail').textContent=required+' required week'+(required===1?'':'s')+' minus '+workingNotice.toFixed(2).replace('.00','')+' week'+(workingNotice===1?'':'s')+' of working notice already given.';
+  $('vacationEquation').textContent=money(terminationPay)+' × '+Math.round(vacRate*100)+'% = '+money(vacPay);
+  $('severanceEquation').textContent=money(mainAvg.pay)+' × '+sevWeeks.toFixed(2).replace('.00','')+' = '+money(severance);
+  $('severanceEquationDetail').textContent=severanceEligible
+    ? 'Your completed years and months of service equal '+sevWeeks.toFixed(2).replace('.00','')+' weeks for ESA severance.'
+    : 'You have less than 5 years of service, so ESA severance is not included.';
+  $('totalEquation').textContent=money(terminationPay)+' + '+money(vacPay)+' + '+money(severance)+' = '+money(total);
+
   var warnings=[];
   if(selected('transfer')==='declined')warnings.push(warn('danger','You turned down another Starbucks job','That can affect ESA entitlement if the other job was considered reasonable alternative employment. The number below may not apply exactly.'));
   if(selected('transfer')==='accepted')warnings.push(warn('info','You accepted another Starbucks job','If your employment continued, termination or severance may not have been triggered in the way this calculator assumes.'));
@@ -191,7 +236,8 @@ function calculate(e){
 }
 
 document.querySelectorAll('input[name="notice"]').forEach(function(x){x.addEventListener('change',function(){toggleNotice();rebuild();});});
-$('lastDay').addEventListener('change',rebuild);
+$('hireDate').addEventListener('change',updateServiceFormula);
+$('lastDay').addEventListener('change',function(){rebuild();updateServiceFormula();});
 $('noticeDate').addEventListener('change',rebuild);
 $('rate').addEventListener('input',updateAverages);
 $('form').addEventListener('submit',calculate);
@@ -200,4 +246,5 @@ var today=new Date(2026,8,27,12);
 $('lastDay').value='2026-09-27';
 rebuild();
 toggleNotice();
+updateServiceFormula();
 }());
