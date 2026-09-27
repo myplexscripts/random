@@ -124,7 +124,7 @@ function toggleNotice(){
   var yes=selected('notice')==='yes';
   $('noticeDateWrap').classList.toggle('hidden',!yes);
   $('noticeHoursCard').classList.toggle('hidden',!yes);
-  $('packageStep').textContent=yes?'4. What does your Starbucks paperwork say?':'3. What does your Starbucks paperwork say?';
+  $('packageStep').textContent='3. What does your Starbucks paperwork say?';
   if(yes&&parseDate($('noticeDate').value))buildWeeks('noticePeriods',parseDate($('noticeDate').value),'notice');
 }
 function warn(type,title,body){
@@ -148,7 +148,7 @@ function calculate(e){
   if(hasNotice){
     if(!noticeDate||noticeDate>last){alert('Please enter the date Starbucks gave you written notice.');return;}
     terminationAvg=average('notice');
-    if(!terminationAvg.count){alert('Enter the earlier weekly hours shown in section 3.');return;}
+    if(!terminationAvg.count){alert('Because you got advance written notice, enter the earlier weekly hours shown under your recent hours.');return;}
     workingNotice=diffDays(noticeDate,last)/7;
   }
 
