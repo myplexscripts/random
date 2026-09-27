@@ -53,19 +53,6 @@
           <label><input type="radio" name="transfer" value="declined"><span>Yes, I turned it down</span></label>
         </div>
       </fieldset>
-
-      <div class="formula-pair">
-        <div class="calc-side">
-          <span class="formula-kicker">Your numbers</span>
-          <strong id="serviceCalc">Enter your dates</strong>
-          <small id="serviceCalcDetail">We’ll use your length of service to find your Ontario notice period.</small>
-        </div>
-        <div class="formula-side">
-          <span class="formula-kicker">Formula</span>
-          <strong>Years of service → notice weeks</strong>
-          <small>Ontario ESA notice rises with service and tops out at 8 weeks once you reach 8 years.</small>
-        </div>
-      </div>
     </section>
 
     <section class="card">
@@ -78,19 +65,6 @@
       <div id="periods"></div>
       <div class="avg"><span>Your calculated average weekly pay</span><strong id="avgPay">$0.00</strong></div>
 
-      <div class="formula-pair">
-        <div class="calc-side">
-          <span class="formula-kicker">Your numbers</span>
-          <strong id="averageCalc">Enter your hours</strong>
-          <small id="averageCalcDetail">We’ll average only the weeks where you actually worked.</small>
-        </div>
-        <div class="formula-side">
-          <span class="formula-kicker">Formula</span>
-          <strong>worked hours ÷ worked weeks × hourly wage</strong>
-          <small>Weeks with 0 hours are not counted in the divisor.</small>
-        </div>
-      </div>
-
       <p class="tiny">Weeks with 0 hours are left out of the average, as required for variable-hour employees.</p>
 
       <div id="noticeHoursCard" class="hidden">
@@ -100,18 +74,6 @@
         </div>
         <div id="noticePeriods"></div>
         <div class="avg"><span>Average weekly pay before notice</span><strong id="noticeAvgPay">$0.00</strong></div>
-        <div class="formula-pair compact-pair">
-          <div class="calc-side">
-            <span class="formula-kicker">Your numbers</span>
-            <strong id="noticeAverageCalc">Enter these earlier hours</strong>
-            <small>These numbers are used only for termination pay because you received advance notice.</small>
-          </div>
-          <div class="formula-side">
-            <span class="formula-kicker">Formula</span>
-            <strong>earlier worked hours ÷ worked weeks × hourly wage</strong>
-            <small>Same averaging method, but using the 12 weeks before written notice.</small>
-          </div>
-        </div>
       </div>
     </section>
 
@@ -150,45 +112,33 @@
     </div>
 
     <div class="breakdown">
-      <h3>How the ESA estimate was calculated</h3>
+      <h3>How we calculated it</h3>
 
-      <div class="formula-step">
-        <div class="calc-side">
-          <span class="formula-kicker">1. Termination pay</span>
-          <strong id="terminationEquation">$0.00 × 0 weeks = $0.00</strong>
-          <small id="terminationEquationDetail">Average weekly pay × notice weeks still owed</small>
-        </div>
-        <div class="formula-side">
-          <span class="formula-kicker">Formula</span>
-          <strong>average weekly pay × unpaid notice weeks</strong>
-          <small>Someone with 8 or more years of service can have up to 8 weeks of ESA notice.</small>
-        </div>
+      <div class="calc-line">
+        <span>Average weekly pay</span>
+        <strong id="averageEquation">0 worked hours ÷ 0 worked weeks × $0.00 = $0.00</strong>
       </div>
 
-      <div class="formula-step">
-        <div class="calc-side">
-          <span class="formula-kicker">2. Vacation pay on termination pay</span>
-          <strong id="vacationEquation">$0.00 × 0% = $0.00</strong>
-          <small>Vacation pay is added to termination pay.</small>
-        </div>
-        <div class="formula-side">
-          <span class="formula-kicker">Formula</span>
-          <strong>termination pay × vacation rate</strong>
-          <small>Usually 4%, or 6% once you have 5 or more years of employment.</small>
-        </div>
+      <div class="calc-line">
+        <span>Notice period</span>
+        <strong id="noticeEquation">0 years of service = 0 weeks</strong>
       </div>
 
-      <div class="formula-step">
-        <div class="calc-side">
-          <span class="formula-kicker">3. ESA severance pay</span>
-          <strong id="severanceEquation">$0.00 × 0 years = $0.00</strong>
-          <small id="severanceEquationDetail">Separate from termination pay.</small>
-        </div>
-        <div class="formula-side">
-          <span class="formula-kicker">Formula</span>
-          <strong>average weekly pay × years and completed months of service</strong>
-          <small>For eligible employees with at least 5 years of service, up to a maximum of 26 weeks.</small>
-        </div>
+      <div class="calc-line">
+        <span>Termination pay</span>
+        <strong id="terminationEquation">$0.00 × 0 weeks = $0.00</strong>
+        <small id="terminationEquationDetail">Average weekly pay × notice weeks still owed</small>
+      </div>
+
+      <div class="calc-line">
+        <span>Vacation pay on termination pay</span>
+        <strong id="vacationEquation">$0.00 × 0% = $0.00</strong>
+      </div>
+
+      <div class="calc-line">
+        <span>ESA severance pay</span>
+        <strong id="severanceEquation">$0.00 × 0 years = $0.00</strong>
+        <small id="severanceEquationDetail">Separate from termination pay.</small>
       </div>
 
       <div class="formula-total">

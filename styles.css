@@ -81,44 +81,31 @@ footer a{color:var(--green);font-weight:700}
   .period-title{flex-direction:column}
   .period-title span{text-align:left}
 }
-.formula-pair,.formula-step{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:10px;
-  margin-top:14px
+.calc-line{
+  display:grid!important;
+  grid-template-columns:190px minmax(0,1fr);
+  gap:14px;
+  align-items:start;
+  border-top:1px solid var(--line);
+  padding:13px 0!important
 }
-.calc-side,.formula-side{
-  min-width:0;
-  padding:14px 15px;
-  border-radius:15px;
-  background:#f0f2ef
-}
-.formula-side{background:#f7f8f6;border:1px solid var(--line)}
-.formula-kicker{
-  display:block;
-  margin-bottom:6px;
-  color:var(--muted);
+.calc-line>span{
+  color:var(--muted)!important;
   font-size:14px;
-  font-weight:800
+  font-weight:750
 }
-.calc-side strong,.formula-side strong{
-  display:block;
-  font-size:16px;
-  line-height:1.35;
+.calc-line>strong{
+  text-align:right;
+  font-size:15px;
+  line-height:1.45;
   overflow-wrap:anywhere
 }
-.calc-side small,.formula-side small{
-  display:block;
-  margin-top:5px;
+.calc-line>small{
+  grid-column:2;
   color:var(--muted);
   font-size:14px;
-  line-height:1.45
-}
-.compact-pair{margin-top:10px}
-.breakdown>div.formula-step{
-  display:grid;
-  border-top:1px solid var(--line);
-  padding:14px 0
+  line-height:1.45;
+  text-align:right
 }
 .formula-total{
   display:flex!important;
@@ -140,7 +127,9 @@ footer a{color:var(--green);font-weight:700}
   overflow-wrap:anywhere
 }
 @media(max-width:620px){
-  .formula-pair,.formula-step{grid-template-columns:1fr}
+  .calc-line{grid-template-columns:1fr;gap:5px}
+  .calc-line>strong,.calc-line>small{text-align:left}
+  .calc-line>small{grid-column:1}
   .formula-total{align-items:flex-start;flex-direction:column}
   .formula-total strong{text-align:left}
 }
