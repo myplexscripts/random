@@ -1,28 +1,32 @@
 # Starbucks Partner Severance Check
 
-An unofficial, static Ontario ESA severance package checker designed for hourly Starbucks partners.
+A simple, unofficial Ontario ESA severance calculator for hourly Starbucks partners.
 
-## What it does
+The interface is intentionally plain and designed for partners with no legal or payroll knowledge.
 
-- Uses the 12 weeks before written notice for variable-hour termination-pay calculations.
-- Uses the 12 weeks before severance separately for ESA severance calculations.
-- Calculates individual ESA notice periods and optionally confirmed mass-termination notice periods.
-- Accounts for working notice already provided.
-- Adds vacation pay on termination pay.
-- Estimates ESA severance for Starbucks Coffee Canada, Inc. partners with at least five years of service, using the app's stated payroll-threshold assumption.
-- Flags declined alternative Starbucks employment for review.
-- Compares Starbucks package components with the estimated ESA termination-related minimum.
-- Separates enhanced compensation from statutory amounts.
-- Generates a package checklist and questions to ask before signing.
-- Runs entirely in the browser. No form data is transmitted.
+## Starbucks-specific assumptions used for the current tool
 
-## Important limits
+- Biweekly payroll.
+- Pay periods run Monday through Sunday.
+- September 18, 2026 is used as the known payroll-cycle anchor.
+- The pay period associated with that payday is August 31 through September 13, 2026.
+- The calculator groups the required weekly-hour entries into familiar Starbucks two-week pay periods.
 
-This is an information and calculation aid, not legal advice. It does not determine common-law notice, enforceability of a termination clause, wrongful dismissal damages, whether an alternative job offer was legally reasonable, or whether mass-termination rules apply to a particular group of employees.
+## What partners enter
 
-## Ontario sources
+1. Hire date, last day and hourly wage.
+2. Recent weekly hours, grouped by Starbucks pay period.
+3. Whether advance written notice was given.
+4. Whether another Starbucks job was offered.
+5. A few clearly labelled amounts from the severance paperwork.
+
+## Calculation notes
+
+For variable-hour employees, weeks with no work are excluded from the regular-weekly-wage average. If advance written notice was given, the app asks for a separate 12-week period before the notice date for termination-pay purposes. ESA severance uses the weeks before severance.
+
+The app is an information aid, not legal advice, and does not calculate common-law notice or decide whether a release should be signed.
+
+## Sources
 
 - https://www.ontario.ca/document/your-guide-employment-standards-act-0/termination-employment
 - https://www.ontario.ca/document/your-guide-employment-standards-act-0/severance-pay
-- https://www.ontario.ca/document/your-guide-employment-standards-act-0/job-seeking-leave
-- https://www.ontario.ca/laws/regulation/010288
