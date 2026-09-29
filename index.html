@@ -44,7 +44,7 @@
 </head>
 <body>
 <div class="stage" aria-hidden="true">
-  <svg id="art" viewBox="0 0 1000 1000" role="img" aria-label="Animated Meloday mesh gradient">
+  <svg id="art" viewBox="0 0 1000 1000" role="img" aria-label="Animated Meloday waveform mesh">
     <defs>
       <linearGradient id="bgGradient" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stop-color="rgb(45,35,80)" />
@@ -63,11 +63,11 @@
       </linearGradient>
 
       <filter id="softMaskBlur" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
-        <feGaussianBlur stdDeviation="22" />
+        <feGaussianBlur stdDeviation="18" />
       </filter>
 
       <filter id="innerSoftness" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
-        <feGaussianBlur stdDeviation="7" />
+        <feGaussianBlur stdDeviation="6" />
       </filter>
 
       <mask id="softM" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
@@ -75,24 +75,24 @@
         <path id="maskPath"
           fill="none"
           stroke="white"
-          stroke-width="245"
+          stroke-width="278"
           stroke-linecap="round"
           stroke-linejoin="round"
           filter="url(#softMaskBlur)" />
         <path id="maskCore"
           fill="none"
           stroke="white"
-          stroke-opacity="0.72"
-          stroke-width="205"
+          stroke-opacity="0.78"
+          stroke-width="238"
           stroke-linecap="round"
           stroke-linejoin="round"
           filter="url(#innerSoftness)" />
       </mask>
 
       <radialGradient id="surfaceTint" cx="50%" cy="42%" r="74%">
-        <stop offset="0%" stop-color="rgb(242,230,252)" stop-opacity="0.16" />
-        <stop offset="58%" stop-color="rgb(185,135,230)" stop-opacity="0.04" />
-        <stop offset="100%" stop-color="rgb(45,35,80)" stop-opacity="0.16" />
+        <stop offset="0%" stop-color="rgb(242,230,252)" stop-opacity="0.10" />
+        <stop offset="58%" stop-color="rgb(185,135,230)" stop-opacity="0.03" />
+        <stop offset="100%" stop-color="rgb(45,35,80)" stop-opacity="0.13" />
       </radialGradient>
     </defs>
 
@@ -127,41 +127,78 @@
     [255, 185, 198]
   ];
 
-  const base = [
-    [ -55, 595 ],
-    [  95, 575 ],
-    [ 235, 355 ],
-    [ 345, 300 ],
-    [ 460, 405 ],
-    [ 555, 685 ],
-    [ 665, 530 ],
-    [ 760, 385 ],
-    [ 870, 500 ],
-    [1055, 585 ]
-  ];
+  const sampleCount = 88;
+  const xs = Array.from({ length: sampleCount }, (_, i) => -70 + (1140 * i) / (sampleCount - 1));
 
-  const phaseY = [0.2, 1.0, 1.8, 2.7, 3.4, 4.2, 4.9, 5.5, 0.8, 2.1];
-  const phaseX = [1.5, 0.5, 2.4, 3.2, 4.0, 5.1, 5.8, 1.1, 2.9, 4.4];
-  const ampY   = [8, 13, 18, 13, 14, 19, 13, 17, 12, 8];
-  const ampX   = [4,  8,  7,  9,  7,  8,  8,  7,  7, 4];
+  function gaussian(x, center, width) {
+    const z = (x - center) / width;
+    return Math.exp(-0.5 * z * z);
+  }
 
-  function catmullRomToBezier(points) {
+  function mProfile(nx, t) {
+    // The major M structure itself slowly shifts and breathes.
+    const leftCenter  = 0.285 + Math.sin(t * 0.42 + 0.4) * 0.020;
+    const valleyCenter = 0.535 + Math.sin(t * 0.37 + 2.1) * 0.024;
+    const rightCenter = 0.755 + Math.sin(t * 0.46 + 4.0) * 0.021;
+
+    const leftWidth   = 0.118 + Math.sin(t * 0.31 + 0.8) * 0.013;
+    const valleyWidth = 0.125 + Math.sin(t * 0.29 + 2.7) * 0.015;
+    const rightWidth  = 0.112 + Math.sin(t * 0.35 + 4.8) * 0.013;
+
+    const leftAmp   = 235 + Math.sin(t * 0.53 + 0.3) * 30;
+    const valleyAmp = 250 + Math.sin(t * 0.47 + 2.2) * 34;
+    const rightAmp  = 205 + Math.sin(t * 0.51 + 4.1) * 28;
+
+    const baseline = 585 + Math.sin(t * 0.24) * 11;
+
+    return baseline
+      - leftAmp * gaussian(nx, leftCenter, leftWidth)
+      + valleyAmp * gaussian(nx, valleyCenter, valleyWidth)
+      - rightAmp * gaussian(nx, rightCenter, rightWidth);
+  }
+
+  function waveformY(nx, t) {
+    // Horizontal phase travel makes the waveform visibly ebb and flow,
+    // rather than just wiggling fixed control points.
+    const xWarp =
+      nx +
+      0.027 * Math.sin((nx * 1.25 - t * 0.11) * Math.PI * 2) +
+      0.012 * Math.sin((nx * 2.10 + t * 0.07 + 0.6) * Math.PI * 2);
+
+    const base = mProfile(xWarp, t);
+
+    const travelling =
+      34 * Math.sin((nx * 1.10 - t * 0.115) * Math.PI * 2 + 0.5) +
+      15 * Math.sin((nx * 2.05 + t * 0.072) * Math.PI * 2 + 1.8) +
+       7 * Math.sin((nx * 3.15 - t * 0.047) * Math.PI * 2 + 4.2);
+
+    const envelope =
+      0.42 +
+      0.58 * (
+        gaussian(nx, 0.28, 0.24) +
+        gaussian(nx, 0.55, 0.22) +
+        gaussian(nx, 0.77, 0.22)
+      ) / 2.1;
+
+    return base + travelling * envelope;
+  }
+
+  function smoothPath(points) {
+    if (points.length < 2) return '';
+
     let d = `M ${points[0][0].toFixed(2)} ${points[0][1].toFixed(2)}`;
 
-    for (let i = 0; i < points.length - 1; i++) {
-      const p0 = points[Math.max(0, i - 1)];
-      const p1 = points[i];
-      const p2 = points[i + 1];
-      const p3 = points[Math.min(points.length - 1, i + 2)];
+    for (let i = 1; i < points.length - 1; i++) {
+      const current = points[i];
+      const next = points[i + 1];
+      const midX = (current[0] + next[0]) / 2;
+      const midY = (current[1] + next[1]) / 2;
 
-      const tension = 0.72;
-      const c1x = p1[0] + ((p2[0] - p0[0]) / 6) * tension;
-      const c1y = p1[1] + ((p2[1] - p0[1]) / 6) * tension;
-      const c2x = p2[0] - ((p3[0] - p1[0]) / 6) * tension;
-      const c2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
-
-      d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+      d += ` Q ${current[0].toFixed(2)} ${current[1].toFixed(2)}, ${midX.toFixed(2)} ${midY.toFixed(2)}`;
     }
+
+    const last = points[points.length - 1];
+    d += ` T ${last[0].toFixed(2)} ${last[1].toFixed(2)}`;
     return d;
   }
 
@@ -178,32 +215,31 @@
   }
 
   function frame(ms) {
-    const cycle = reduceMotion ? 0 : (ms % 16000) / 16000;
+    // Long cycle keeps the motion soft and unhurried.
+    const cycle = reduceMotion ? 0 : (ms % 22000) / 22000;
     const t = cycle * Math.PI * 2;
 
-    const points = base.map(([x, y], i) => {
-      if (i === 0 || i === base.length - 1) return [x, y];
-
-      const slow = Math.sin(t + phaseY[i]);
-      const second = Math.sin(t * 2 + phaseY[i] * 0.73) * 0.35;
-      const driftX = Math.sin(t * 0.72 + phaseX[i]);
-
-      return [
-        x + driftX * ampX[i],
-        y + (slow + second) * ampY[i]
-      ];
+    const points = xs.map(x => {
+      const nx = (x + 70) / 1140;
+      return [x, waveformY(nx, t)];
     });
 
-    const d = catmullRomToBezier(points);
+    const d = smoothPath(points);
     path.setAttribute('d', d);
     core.setAttribute('d', d);
 
-    const width = 244 + Math.sin(t * 0.82) * 12 + Math.sin(t * 1.7 + 0.8) * 4;
-    path.setAttribute('stroke-width', width.toFixed(2));
-    core.setAttribute('stroke-width', (width - 38).toFixed(2));
+    // Thickness breathes gently with the same waveform rhythm.
+    const width =
+      276 +
+      Math.sin(t * 0.72 + 0.3) * 13 +
+      Math.sin(t * 1.35 + 2.0) * 5;
 
-    const drift = Math.sin(t * 0.78) * 120;
-    const tilt = 330 + Math.sin(t * 0.55 + 0.6) * 90;
+    path.setAttribute('stroke-width', width.toFixed(2));
+    core.setAttribute('stroke-width', (width - 40).toFixed(2));
+
+    // Colour movement is independent of shape movement.
+    const drift = Math.sin(t * 0.52 + 0.9) * 135;
+    const tilt = 300 + Math.sin(t * 0.38 + 0.6) * 60;
     gradient.setAttribute('x1', String(-120 + drift));
     gradient.setAttribute('x2', String(1120 + drift));
     gradient.setAttribute('y1', String(500 - tilt * 0.5));
@@ -218,8 +254,8 @@
       stop.setAttribute('stop-color', rgb(mix(palette[a], palette[b], local)));
     });
 
-    const fieldX = -180 + Math.sin(t * 0.43 + 1.2) * 28;
-    const fieldY = Math.cos(t * 0.37) * 12;
+    const fieldX = -180 + Math.sin(t * 0.34 + 1.2) * 24;
+    const fieldY = Math.cos(t * 0.31) * 10;
     field.setAttribute('x', fieldX.toFixed(2));
     field.setAttribute('y', fieldY.toFixed(2));
 
