@@ -1,238 +1,233 @@
 <!doctype html>
-<html lang="en-CA">
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-  <meta name="theme-color" content="#f5f6f3">
-  <title>Starbucks Partner Severance Check</title>
-  <link rel="stylesheet" href="styles.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<title>Meloday Flow Mesh</title>
+<style>
+  :root {
+    color-scheme: dark;
+    background: rgb(45 35 80);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    width: 100%;
+    min-height: 100%;
+    margin: 0;
+    overflow: hidden;
+    background:
+      radial-gradient(circle at 18% 18%, rgb(30 90 220 / 0.28), transparent 46%),
+      radial-gradient(circle at 82% 78%, rgb(135 55 105 / 0.35), transparent 50%),
+      rgb(45 35 80);
+  }
+
+  body {
+    display: grid;
+    place-items: center;
+    font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  }
+
+  .stage {
+    width: min(100vw, 100vh);
+    aspect-ratio: 1;
+    overflow: hidden;
+  }
+
+  svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+</style>
 </head>
 <body>
-<main class="wrap">
-  <h1>Starbucks Partner Severance Check</h1>
-  <p class="intro">For hourly Starbucks partners in Ontario. Use your pay statements and severance paperwork to estimate the ESA minimum.</p>
+<div class="stage" aria-hidden="true">
+  <svg id="art" viewBox="0 0 1000 1000" role="img" aria-label="Animated Meloday mesh gradient">
+    <defs>
+      <linearGradient id="bgGradient" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="rgb(45,35,80)" />
+        <stop offset="48%" stop-color="rgb(75,65,120)" />
+        <stop offset="100%" stop-color="rgb(85,25,65)" />
+      </linearGradient>
 
-  <div class="note">Unofficial tool. It estimates Ontario ESA minimums only. It does not tell you whether to sign a release or calculate possible common-law entitlement.</div>
+      <linearGradient id="flowGradient" gradientUnits="userSpaceOnUse" x1="-80" y1="350" x2="1080" y2="650">
+        <stop id="s0" offset="0%"   stop-color="rgb(30,90,220)" />
+        <stop id="s1" offset="16%"  stop-color="rgb(30,180,255)" />
+        <stop id="s2" offset="33%"  stop-color="rgb(115,155,245)" />
+        <stop id="s3" offset="50%"  stop-color="rgb(135,50,255)" />
+        <stop id="s4" offset="67%"  stop-color="rgb(225,20,135)" />
+        <stop id="s5" offset="84%"  stop-color="rgb(255,128,185)" />
+        <stop id="s6" offset="100%" stop-color="rgb(215,190,245)" />
+      </linearGradient>
 
-  <form id="form">
-    <section class="card">
-      <h2>1. About your job</h2>
+      <filter id="softMaskBlur" x="-35%" y="-35%" width="170%" height="170%" color-interpolation-filters="sRGB">
+        <feGaussianBlur stdDeviation="22" />
+      </filter>
 
-      <div class="grid">
-        <label>
-          <span>When did you start at Starbucks?</span>
-          <input id="hireDate" type="date" required>
-        </label>
+      <filter id="innerSoftness" x="-25%" y="-25%" width="150%" height="150%" color-interpolation-filters="sRGB">
+        <feGaussianBlur stdDeviation="7" />
+      </filter>
 
-        <label>
-          <span>What is your last day?</span>
-          <input id="lastDay" type="date" required>
-        </label>
+      <mask id="softM" maskUnits="userSpaceOnUse" x="0" y="0" width="1000" height="1000">
+        <rect width="1000" height="1000" fill="black" />
+        <path id="maskPath"
+          fill="none"
+          stroke="white"
+          stroke-width="245"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          filter="url(#softMaskBlur)" />
+        <path id="maskCore"
+          fill="none"
+          stroke="white"
+          stroke-opacity="0.72"
+          stroke-width="205"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          filter="url(#innerSoftness)" />
+      </mask>
 
-        <label>
-          <span>What is your current hourly wage?</span>
-          <div class="money"><b>$</b><input id="rate" type="number" min="0" step="0.01" inputmode="decimal" placeholder="27.69" required></div>
-          <small>On your paystub, look at the Rate beside Regular Wage.</small>
-        </label>
-      </div>
+      <radialGradient id="surfaceTint" cx="50%" cy="42%" r="74%">
+        <stop offset="0%" stop-color="rgb(242,230,252)" stop-opacity="0.16" />
+        <stop offset="58%" stop-color="rgb(185,135,230)" stop-opacity="0.04" />
+        <stop offset="100%" stop-color="rgb(45,35,80)" stop-opacity="0.16" />
+      </radialGradient>
+    </defs>
 
-      <fieldset>
-        <legend>Did Starbucks tell you in writing ahead of time that your job would end?</legend>
-        <div class="choices">
-          <label><input type="radio" name="notice" value="no" checked><span>No, it ended right away</span></label>
-          <label><input type="radio" name="notice" value="yes"><span>Yes</span></label>
-        </div>
-      </fieldset>
+    <rect width="1000" height="1000" fill="url(#bgGradient)" />
 
-      <label id="noticeDateWrap" class="hidden field-gap">
-        <span>What date did Starbucks give you written notice?</span>
-        <input id="noticeDate" type="date">
-      </label>
+    <g mask="url(#softM)">
+      <rect id="colourField" x="-180" y="0" width="1360" height="1000" fill="url(#flowGradient)" />
+      <rect width="1000" height="1000" fill="url(#surfaceTint)" />
+    </g>
+  </svg>
+</div>
 
-      <fieldset>
-        <legend>Did Starbucks offer you another job at another store?</legend>
-        <div class="choices three">
-          <label><input type="radio" name="transfer" value="no" checked><span>No</span></label>
-          <label><input type="radio" name="transfer" value="accepted"><span>Yes, I accepted it</span></label>
-          <label><input type="radio" name="transfer" value="declined"><span>Yes, I turned it down</span></label>
-        </div>
-      </fieldset>
-    </section>
+<script>
+(() => {
+  const path = document.getElementById('maskPath');
+  const core = document.getElementById('maskCore');
+  const gradient = document.getElementById('flowGradient');
+  const field = document.getElementById('colourField');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    <section class="card">
-      <h2>2. Use your recent pay statements</h2>
-      <p class="small">For each pay period below, copy the <strong>Current</strong> amount from the two paystub lines shown.</p>
+  const stops = [0,1,2,3,4,5,6].map(i => document.getElementById(`s${i}`));
 
-      <div class="stub-guide">
-        <div class="stub-use">
-          <strong>Use these</strong>
-          <span>Regular Wage</span>
-          <span>Training</span>
-        </div>
-        <div class="stub-ignore">
-          <strong>Do not use</strong>
-          <span>Gross Hrs/Wages, tips, Retail Vacat, Retail Holid, Holiday prem, taxable benefits, NonCash Award, deductions</span>
-        </div>
-      </div>
+  const palette = [
+    [30, 90, 220],
+    [30, 180, 255],
+    [115, 155, 245],
+    [135, 50, 255],
+    [185, 135, 230],
+    [215, 190, 245],
+    [225, 20, 135],
+    [255, 128, 185],
+    [255, 185, 198]
+  ];
 
-      <div class="pay-help">
-        <strong>Why do we ask how many weeks you worked?</strong>
-        <span>Ontario averages regular wages over the weeks you actually worked. A Starbucks paystub covers two weeks.</span>
-      </div>
+  const base = [
+    [ -55, 595 ],
+    [  95, 575 ],
+    [ 235, 355 ],
+    [ 345, 300 ],
+    [ 460, 405 ],
+    [ 555, 685 ],
+    [ 665, 530 ],
+    [ 760, 385 ],
+    [ 870, 500 ],
+    [1055, 585 ]
+  ];
 
-      <div id="periods"></div>
+  const phaseY = [0.2, 1.0, 1.8, 2.7, 3.4, 4.2, 4.9, 5.5, 0.8, 2.1];
+  const phaseX = [1.5, 0.5, 2.4, 3.2, 4.0, 5.1, 5.8, 1.1, 2.9, 4.4];
+  const ampY   = [8, 13, 18, 13, 14, 19, 13, 17, 12, 8];
+  const ampX   = [4,  8,  7,  9,  7,  8,  8,  7,  7, 4];
 
-      <div class="avg">
-        <span>Your calculated average weekly pay</span>
-        <strong id="avgPay">$0.00</strong>
-      </div>
+  function catmullRomToBezier(points) {
+    let d = `M ${points[0][0].toFixed(2)} ${points[0][1].toFixed(2)}`;
 
-      <label class="check-row">
-        <input id="hadSickPay" type="checkbox">
-        <span>One of these paystubs has a Current amount beside <strong>Sick and Fam</strong></span>
-      </label>
+    for (let i = 0; i < points.length - 1; i++) {
+      const p0 = points[Math.max(0, i - 1)];
+      const p1 = points[i];
+      const p2 = points[i + 1];
+      const p3 = points[Math.min(points.length - 1, i + 2)];
 
-      <div id="noticeHoursCard" class="hidden">
-        <div class="pay-help notice-help">
-          <strong>Because you got advance written notice, we need an earlier set of pay statements.</strong>
-          <span>These are the pay periods covering the 12 weeks before Starbucks gave you notice.</span>
-        </div>
-        <div id="noticePeriods"></div>
-        <div class="avg">
-          <span>Average weekly pay before notice</span>
-          <strong id="noticeAvgPay">$0.00</strong>
-        </div>
-      </div>
-    </section>
+      const tension = 0.72;
+      const c1x = p1[0] + ((p2[0] - p0[0]) / 6) * tension;
+      const c1y = p1[1] + ((p2[1] - p0[1]) / 6) * tension;
+      const c2x = p2[0] - ((p3[0] - p1[0]) / 6) * tension;
+      const c2y = p2[1] - ((p3[1] - p1[1]) / 6) * tension;
 
-    <section class="card">
-      <h2>3. What does your Starbucks paperwork say?</h2>
-      <p class="small">Only enter amounts you can clearly find. Leave the rest blank.</p>
+      d += ` C ${c1x.toFixed(2)} ${c1y.toFixed(2)}, ${c2x.toFixed(2)} ${c2y.toFixed(2)}, ${p2[0].toFixed(2)} ${p2[1].toFixed(2)}`;
+    }
+    return d;
+  }
 
-      <div class="package-grid">
-        <label>
-          <span>Termination pay</span>
-          <div class="money"><b>$</b><input id="offerTermination" type="number" min="0" step="0.01" inputmode="decimal"></div>
-        </label>
+  function mix(a, b, t) {
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * t),
+      Math.round(a[1] + (b[1] - a[1]) * t),
+      Math.round(a[2] + (b[2] - a[2]) * t)
+    ];
+  }
 
-        <label>
-          <span>Vacation pay on termination pay</span>
-          <div class="money"><b>$</b><input id="offerVacation" type="number" min="0" step="0.01" inputmode="decimal"></div>
-        </label>
+  function rgb(c) {
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  }
 
-        <label>
-          <span>ESA severance pay</span>
-          <div class="money"><b>$</b><input id="offerSeverance" type="number" min="0" step="0.01" inputmode="decimal"></div>
-        </label>
+  function frame(ms) {
+    const cycle = reduceMotion ? 0 : (ms % 16000) / 16000;
+    const t = cycle * Math.PI * 2;
 
-        <label>
-          <span>Extra payment for signing</span>
-          <div class="money"><b>$</b><input id="offerExtra" type="number" min="0" step="0.01" inputmode="decimal"></div>
-        </label>
+    const points = base.map(([x, y], i) => {
+      if (i === 0 || i === base.length - 1) return [x, y];
 
-        <label>
-          <span>Other termination payment</span>
-          <div class="money"><b>$</b><input id="offerOther" type="number" min="0" step="0.01" inputmode="decimal"></div>
-        </label>
-      </div>
+      const slow = Math.sin(t + phaseY[i]);
+      const second = Math.sin(t * 2 + phaseY[i] * 0.73) * 0.35;
+      const driftX = Math.sin(t * 0.72 + phaseX[i]);
 
-      <p class="tiny">Do not put your normal outstanding vacation balance into these boxes. That is separate from the termination calculation.</p>
+      return [
+        x + driftX * ampX[i],
+        y + (slow + second) * ampY[i]
+      ];
+    });
 
-      <fieldset>
-        <legend>Does it ask you to sign a “Full and Final Release”?</legend>
-        <div class="choices three">
-          <label><input type="radio" name="release" value="yes"><span>Yes</span></label>
-          <label><input type="radio" name="release" value="no"><span>No</span></label>
-          <label><input type="radio" name="release" value="unknown" checked><span>I don't know</span></label>
-        </div>
-      </fieldset>
-    </section>
+    const d = catmullRomToBezier(points);
+    path.setAttribute('d', d);
+    core.setAttribute('d', d);
 
-    <button class="calculate" type="submit">Check my package</button>
-  </form>
+    const width = 244 + Math.sin(t * 0.82) * 12 + Math.sin(t * 1.7 + 0.8) * 4;
+    path.setAttribute('stroke-width', width.toFixed(2));
+    core.setAttribute('stroke-width', (width - 38).toFixed(2));
 
-  <section id="results" class="results hidden" aria-live="polite">
-    <h2>Your result</h2>
-    <div id="warnings"></div>
+    const drift = Math.sin(t * 0.78) * 120;
+    const tilt = 330 + Math.sin(t * 0.55 + 0.6) * 90;
+    gradient.setAttribute('x1', String(-120 + drift));
+    gradient.setAttribute('x2', String(1120 + drift));
+    gradient.setAttribute('y1', String(500 - tilt * 0.5));
+    gradient.setAttribute('y2', String(500 + tilt * 0.5));
 
-    <div class="numbers">
-      <div>
-        <span>Estimated ESA minimum</span>
-        <strong id="esaTotal">$0.00</strong>
-        <small>Termination pay + vacation pay on it + ESA severance</small>
-      </div>
+    const colorShift = cycle * palette.length;
+    stops.forEach((stop, i) => {
+      const pos = (i * 1.22 + colorShift) % palette.length;
+      const a = Math.floor(pos);
+      const b = (a + 1) % palette.length;
+      const local = pos - a;
+      stop.setAttribute('stop-color', rgb(mix(palette[a], palette[b], local)));
+    });
 
-      <div>
-        <span>Starbucks cash entered</span>
-        <strong id="offerTotal">$0.00</strong>
-        <small>Total of the termination-related amounts you entered</small>
-      </div>
+    const fieldX = -180 + Math.sin(t * 0.43 + 1.2) * 28;
+    const fieldY = Math.cos(t * 0.37) * 12;
+    field.setAttribute('x', fieldX.toFixed(2));
+    field.setAttribute('y', fieldY.toFixed(2));
 
-      <div class="extra">
-        <span>Extra payment for signing</span>
-        <strong id="extraPay">$0.00</strong>
-        <small>Compare this with what the release asks you to give up</small>
-      </div>
-    </div>
+    if (!reduceMotion) requestAnimationFrame(frame);
+  }
 
-    <div class="breakdown">
-      <h3>How we calculated it</h3>
-
-      <div class="calc-line">
-        <span>Average weekly pay</span>
-        <strong id="averageEquation">$0.00 ÷ 0 worked weeks = $0.00</strong>
-      </div>
-
-      <div class="calc-line">
-        <span>Notice period</span>
-        <strong id="noticeEquation">0 years of service = 0 weeks</strong>
-      </div>
-
-      <div class="calc-line">
-        <span>Termination pay</span>
-        <strong id="terminationEquation">$0.00 × 0 weeks = $0.00</strong>
-        <small id="terminationEquationDetail">Average weekly pay × notice weeks still owed</small>
-      </div>
-
-      <div class="calc-line">
-        <span>Vacation pay on termination pay</span>
-        <strong id="vacationEquation">$0.00 × 0% = $0.00</strong>
-      </div>
-
-      <div class="calc-line">
-        <span>ESA severance pay</span>
-        <strong id="severanceEquation">$0.00 × 0 years = $0.00</strong>
-        <small id="severanceEquationDetail">Separate from termination pay.</small>
-      </div>
-
-      <div class="formula-total">
-        <span>Estimated ESA minimum</span>
-        <strong id="totalEquation">$0.00 + $0.00 + $0.00 = $0.00</strong>
-      </div>
-    </div>
-
-    <div class="review">
-      <h3>Before you sign, find these in the paperwork</h3>
-      <div class="checklist">
-        <span>□ Full and Final Release</span>
-        <span>□ Signing deadline</span>
-        <span>□ Benefits end date</span>
-        <span>□ Vacation payout</span>
-        <span>□ RRSP / DPSP information</span>
-        <span>□ Bean Stock / equity</span>
-        <span>□ Rehire language</span>
-        <span>□ Confidentiality</span>
-        <span>□ Non-disparagement</span>
-        <span>□ Record of Employment</span>
-      </div>
-    </div>
-  </section>
-
-  <footer>
-    <p>Not affiliated with Starbucks. Nothing you enter is sent anywhere.</p>
-    <p><a href="https://www.ontario.ca/document/your-guide-employment-standards-act-0/termination-employment">Ontario termination rules</a> · <a href="https://www.ontario.ca/document/your-guide-employment-standards-act-0/severance-pay">Ontario severance rules</a></p>
-  </footer>
-</main>
-<script src="app.js"></script>
+  requestAnimationFrame(frame);
+})();
+</script>
 </body>
 </html>
