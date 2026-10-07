@@ -1,34 +1,23 @@
-# Starbucks Partner Severance Check
+# Ohuhu Oahu Palette Lab
 
-A simple, unofficial Ontario ESA severance calculator for hourly Starbucks partners.
+A mobile-friendly single-page palette generator built specifically for the current Ohuhu Oahu 100 marker set.
 
-## Paystub-first input
+## Features
 
-The tool is built around the actual Starbucks pay statement layout.
+- Restricts every palette to the official Oahu 100 set
+- Uses official current marker codes and names
+- Loads matching old Oahu codes/names and digital hex approximations from the MysticSparkleWings Ohuhu data source
+- Palette filters: random, similar, warm, cool, pastel, vivid, moody, neutral
+- Palette sizes from 3 to 8 colours
+- Lock individual colours while regenerating
+- Local image upload and dominant-colour matching to the nearest Oahu marker
+- Browse/search all 100 markers
+- Print queue with four palette cards per US Letter page
+- Blank hand-swatch area beside each printed colour
+- No page header or title in printed output
 
-For paid periods, partners copy the **Current** dollar amounts from:
+## Notes
 
-- Regular Wage
-- Training
+The on-screen colour is only a digital approximation. Real alcohol marker swatches vary by paper, ink load, lighting, scanning, and display calibration. The print cards intentionally include a blank swatch box for the actual marker.
 
-The tool tells partners not to use Gross Hrs/Wages, tips, vacation pay, public holiday pay, holiday premium, taxable benefits, NonCash Awards, or deductions.
-
-For a current pay period that has not been paid yet, the partner enters Regular Wage and Training hours and the tool converts them using the current hourly rate.
-
-Each Starbucks pay period covers two Monday-to-Sunday weeks. The partner only needs to say whether they actually worked 2, 1, or 0 of those weeks.
-
-## Payroll anchor
-
-The current tool uses September 18, 2026 as the latest known Starbucks payday and August 31 to September 13, 2026 as that pay period. Pay periods are biweekly and run Monday through Sunday.
-
-## Legal calculation
-
-For employees without a regular work week, Ontario uses average regular wages for the weeks actually worked during the relevant 12-week period.
-
-This tool treats Regular Wage and Training as the clearly identifiable regular-wage lines from the Starbucks pay statement. It does not automatically include Sick and Fam because that can require closer review of the worked weeks.
-
-## Sources
-
-- https://www.ontario.ca/document/your-guide-employment-standards-act-0/termination-employment
-- https://www.ontario.ca/document/your-guide-employment-standards-act-0/severance-pay
-- https://www.ontario.ca/document/employment-standard-act-policy-and-interpretation-manual/part-i-definitions
+The palette filter thresholds are based on the logic used by the MysticSparkleWings Ohuhu Palette Generator. Marker set membership is restricted to the official Ohuhu Oahu 100 chart.
