@@ -15,7 +15,7 @@
       <div>
         <p class="eyebrow">Ohuhu Oahu 100</p>
         <h1>Photo Palette Maker</h1>
-        <p class="subtitle">Finds beautiful Unsplash photos and turns them into six-colour palettes using the original digital colours for your exact marker set.</p>
+        <p class="subtitle">Finds beautiful Unsplash photos, chooses six colours actually present in each image, then matches those colours to your original digital Ohuhu marker set.</p>
       </div>
       <div class="status-pill" id="sourceStatus" aria-live="polite"><span class="status-dot"></span><span>Ready</span></div>
     </header>
@@ -43,7 +43,7 @@
       <div class="generator-copy">
         <p class="eyebrow">Automatic workflow</p>
         <h2 id="generatorTitle">Generate photo palettes</h2>
-        <p>Each accepted card uses six sampled photo colours on the top row and their six closest marker matches underneath. Images that need too many important colours to fit a six-colour palette are skipped automatically.</p>
+        <p>The app now chooses the six source colours first, then finds a unique nearby marker for each one. Images that cannot be represented cleanly with six colours are skipped automatically.</p>
       </div>
       <div class="generator-actions">
         <label class="field"><span>Palettes</span><select id="targetCount"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option></select></label>
@@ -77,12 +77,13 @@
       <div class="marker-grid" id="markerGrid"></div>
     </details>
 
-    <footer class="app-footer"><p>Front: sampled photo colours above marker matches. Back: marker codes and names paired with the original sampled colours. Unsplash is the only photo source.</p></footer>
+    <footer class="app-footer"><p>Front: actual sampled photo colours above their marker matches. Back: marker codes and names paired with those same sampled colours. Unsplash is the only photo source.</p></footer>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="marker-colour-calibration.js"></script>
   <script src="app.js"></script>
   <script src="unsplash.js"></script>
+  <script src="pairing-fix.js"></script>
 </body>
 </html>
