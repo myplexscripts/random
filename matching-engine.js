@@ -59,10 +59,13 @@
         const tonal = selected.length
           ? Math.min(...selected.map(chosen => Math.abs(chosen.lab.L - cluster.lab.L)))
           : .14;
-        const colourfulAccent = Math.min(chroma(cluster.lab), .18) * (cluster.weight >= .012 ? .55 : .15);
-        const score = cluster.weight * 4.3
-          + Math.min(separation, .20) * 1.25
-          + Math.min(tonal, .20) * .18
+        const sourceChroma = chroma(cluster.lab);
+        const colourfulAccent = sourceChroma >= .05 && cluster.weight >= .012
+          ? Math.min(sourceChroma, .18) * .48
+          : 0;
+        const score = cluster.weight * 4.5
+          + Math.min(separation, .20) * 1.15
+          + Math.min(tonal, .20) * .16
           + colourfulAccent;
 
         if (selected.length && separation < .022) return;
@@ -97,11 +100,42 @@
       if (nearest > .12) farMass += cluster.weight;
     });
 
-    // Only reject genuinely chaotic images. The six swatches do not need to
-    // literally account for every pixel, just the visual colour story.
     if (selectedCoverage < .34 && farMass > .48) return false;
     if (farMass > .56) return false;
     if (compressionError > .145) return false;
+    return true;
+  }
+
+  function pairGuard(sourceLab, markerLab) {
+    const sourceChroma = chroma(sourceLab);
+    const markerChroma = chroma(markerLab);
+    const chromaGap = Math.abs(sourceChroma - markerChroma);
+
+    // True neutrals should stay neutral. This prevents white/grey source colours
+    // from being filled out with visibly cyan, peach, green, or purple markers.
+    if (sourceChroma <= .03) {
+      const allowedMarkerChroma = sourceLab.L >= .74
+        ? Math.max(.033, sourceChroma + .020)
+        : Math.max(.040, sourceChroma + .026);
+      if (markerChroma > allowedMarkerChroma) return false;
+      if (chromaGap > .035) return false;
+      return true;
+    }
+
+    // Soft tints may use neutral-adjacent markers, but not a clearly different tint.
+    if (sourceChroma <= .055) {
+      if (markerChroma > .080) return false;
+      if (markerChroma > .032 && hueDiff(sourceLab, markerLab) > 1.00) return false;
+      if (chromaGap > .060) return false;
+      return true;
+    }
+
+    // Once the source colour is visibly chromatic, preserve its hue family first.
+    // Stronger colours get a tighter hue window.
+    if (markerChroma < .025) return false;
+    const maxHueDifference = sourceChroma >= .11 ? .66 : .86;
+    if (hueDiff(sourceLab, markerLab) > maxHueDifference) return false;
+    if (chromaGap > .115) return false;
     return true;
   }
 
@@ -109,35 +143,56 @@
     const distance = oklabDistance(sourceLab, markerLab);
     const sourceChroma = chroma(sourceLab);
     const markerChroma = chroma(markerLab);
+    const chromaGap = Math.abs(sourceChroma - markerChroma);
     let penalty = 0;
 
-    // Strongly discourage hue-family jumps such as green source -> brown marker.
-    if (sourceChroma >= .045 && markerChroma >= .03) {
+    if (sourceChroma <= .03) {
+      // Within the neutral-safe pool, favour the least tinted marker.
+      penalty += Math.max(0, markerChroma - sourceChroma) * .45;
+    } else if (sourceChroma <= .055) {
+      if (markerChroma > .03) penalty += hueDiff(sourceLab, markerLab) * .025;
+      penalty += chromaGap * .18;
+    } else {
       const hd = hueDiff(sourceLab, markerLab);
-      if (hd > 1.55) penalty += .16;
-      else if (hd > 1.10) penalty += .075;
-      else if (hd > .82) penalty += .025;
+      penalty += Math.max(0, hd - .18) * .055;
+      penalty += chromaGap * .16;
     }
-
-    // Keep neutrals neutral and colourful colours reasonably colourful.
-    if (sourceChroma < .03 && markerChroma > .085) penalty += .08;
-    if (sourceChroma > .075 && markerChroma < .02) penalty += .07;
 
     return { distance, cost: distance + penalty };
   }
 
-  function assignUniqueMarkers(sourceColours) {
-    const candidates = sourceColours.map(source => state.markers
+  function candidateMarkersFor(source) {
+    return state.markers
+      .filter(marker => pairGuard(source.lab, marker.oklab))
       .map(marker => {
         const result = markerCost(source.lab, marker.oklab);
-        return { marker, distance: result.distance, cost: result.cost };
+        return {
+          marker,
+          distance: result.distance,
+          cost: result.cost,
+          hueDifference: chroma(source.lab) > .03 && chroma(marker.oklab) > .025
+            ? hueDiff(source.lab, marker.oklab)
+            : 0,
+          chromaDifference: Math.abs(chroma(source.lab) - chroma(marker.oklab))
+        };
       })
       .sort((a, b) => a.cost - b.cost)
-      .slice(0, 18));
+      .slice(0, 20);
+  }
 
+  function assignUniqueMarkers(sourceColours) {
+    const candidates = sourceColours.map(candidateMarkersFor);
+    if (candidates.some(list => list.length === 0)) return null;
+
+    // Solve the most constrained source colours first. That prevents a flexible
+    // neutral from taking the only good marker available to a harder colour.
     const order = candidates
-      .map((list, index) => ({ index, spread: list[5]?.cost - list[0]?.cost || 0 }))
-      .sort((a, b) => a.spread - b.spread)
+      .map((list, index) => ({
+        index,
+        count: list.length,
+        spread: (list[5]?.cost ?? list[list.length - 1]?.cost ?? 0) - (list[0]?.cost ?? 0)
+      }))
+      .sort((a, b) => a.count - b.count || a.spread - b.spread)
       .map(item => item.index);
 
     const used = new Set();
@@ -167,10 +222,25 @@
     return best;
   }
 
-  function similarityFromDistance(distance) {
-    // This is intentionally a practical confidence score rather than a raw
-    // Delta-E percentage. 0.10 OKLab distance still reads as a strong match.
-    return clamp(100 - distance * 100, 0, 100);
+  function perceptualSimilarity(pair) {
+    const sourceChroma = chroma(pair.source.lab);
+    const markerChroma = chroma(pair.marker.oklab);
+    const chromaGap = Math.abs(sourceChroma - markerChroma);
+
+    let similarity = 100 - pair.distance * 100;
+
+    if (sourceChroma <= .03) {
+      // Tint shifts in near-neutrals are visually obvious even when OKLab distance is small.
+      similarity -= Math.max(0, markerChroma - sourceChroma - .008) * 160;
+    } else if (sourceChroma <= .055) {
+      similarity -= chromaGap * 32;
+      if (markerChroma > .03) similarity -= Math.max(0, pair.hueDifference - .28) * 5;
+    } else {
+      similarity -= chromaGap * 24;
+      similarity -= Math.max(0, pair.hueDifference - .22) * 7;
+    }
+
+    return clamp(similarity, 0, 100);
   }
 
   analysePhoto = async function analysePhotoReliable(photo) {
@@ -186,6 +256,8 @@
     const sourceColours = chooseSixSourceColours(clusters);
     if (sourceColours.length !== 6 || !imageFitsSixColours(clusters, sourceColours)) return null;
 
+    // If six perceptually plausible unique marker matches do not exist, reject
+    // the photo rather than inventing a sixth colour from the wrong family.
     const assignment = assignUniqueMarkers(sourceColours);
     if (!assignment) return null;
 
@@ -193,13 +265,17 @@
       source,
       marker: assignment[index].marker,
       distance: assignment[index].distance,
-      cost: assignment[index].cost
+      cost: assignment[index].cost,
+      hueDifference: assignment[index].hueDifference,
+      chromaDifference: assignment[index].chromaDifference
     })).sort((a, b) => a.source.lab.L - b.source.lab.L);
 
-    // A single terrible pairing is still not acceptable, even if the average is good.
-    if (pairs.some(pair => pair.distance > .19 || pair.cost > .24)) return null;
+    const similarities = pairs.map(perceptualSimilarity);
+    const minimumPairScore = Math.max(78, threshold() - 8);
 
-    const similarities = pairs.map(pair => similarityFromDistance(pair.distance));
+    // Do not hide one visibly bad pair inside a strong average.
+    if (similarities.some(value => value < minimumPairScore)) return null;
+
     const score = similarities.reduce((sum, value) => sum + value, 0) / similarities.length;
     if (score < threshold()) return null;
 
@@ -208,7 +284,8 @@
       markers: pairs.map(pair => pair.marker),
       originals: pairs.map(pair => ({ hex: labToHex(pair.source.lab) })),
       complexity: {
-        selectedCoverage: pairs.reduce((sum, pair) => sum + pair.source.weight, 0)
+        selectedCoverage: pairs.reduce((sum, pair) => sum + pair.source.weight, 0),
+        minimumPairScore: Math.min(...similarities)
       }
     };
   };
