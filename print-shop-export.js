@@ -1,19 +1,15 @@
 (() => {
+  const PAGE_W = 8.5;
+  const PAGE_H = 11;
   const TRIM_W = 4;
   const TRIM_H = 5;
   const BLEED = .125;
-  const SLUG = .125;
   const DPI = 300;
   const STRIP_H = 1;
-  const PAGE_W = TRIM_W + 2 * (BLEED + SLUG);
-  const PAGE_H = TRIM_H + 2 * (BLEED + SLUG);
-  const ART_X = SLUG;
-  const ART_Y = SLUG;
-  const TRIM_X = SLUG + BLEED;
-  const TRIM_Y = SLUG + BLEED;
   const ART_W = TRIM_W + BLEED * 2;
   const ART_H = TRIM_H + BLEED * 2;
-  const ROUND_CORNER_MM = 3;
+  const SLOT_X = (PAGE_W - ART_W) / 2;
+  const SLOT_Y = [.25, .25 + ART_H];
 
   function threshold() {
     return Math.max(85, Math.min(100, Number(document.getElementById("matchThreshold")?.value || 85)));
@@ -39,7 +35,11 @@
 
   function hexRgb(hex) {
     const raw = String(hex || "#FFFFFF").replace("#", "");
-    return [parseInt(raw.slice(0, 2), 16) || 0, parseInt(raw.slice(2, 4), 16) || 0, parseInt(raw.slice(4, 6), 16) || 0];
+    return [
+      parseInt(raw.slice(0, 2), 16) || 0,
+      parseInt(raw.slice(2, 4), 16) || 0,
+      parseInt(raw.slice(4, 6), 16) || 0
+    ];
   }
 
   function readableText(hex) {
@@ -68,7 +68,10 @@
   function drawCover(ctx, image, w, h) {
     const sourceRatio = image.naturalWidth / image.naturalHeight;
     const targetRatio = w / h;
-    let sx = 0, sy = 0, sw = image.naturalWidth, sh = image.naturalHeight;
+    let sx = 0;
+    let sy = 0;
+    let sw = image.naturalWidth;
+    let sh = image.naturalHeight;
     if (sourceRatio > targetRatio) {
       sw = sh * targetRatio;
       sx = (image.naturalWidth - sw) / 2;
@@ -79,18 +82,47 @@
     ctx.drawImage(image, sx, sy, sw, sh, 0, 0, w, h);
   }
 
-  async function renderPhotoCanvas(palette) {
+  async function renderFrontCanvas(palette) {
     const canvas = document.createElement("canvas");
     canvas.width = Math.round(ART_W * DPI);
-    canvas.height = Math.round(3 * DPI);
+    canvas.height = Math.round(ART_H * DPI);
+    const ctx = canvas.getContext("2d");
+    const bleedPx = BLEED * DPI;
+    const trimWpx = TRIM_W * DPI;
+    const trimHpx = TRIM_H * DPI;
+    const colW = trimWpx / 6;
+    const stripPx = STRIP_H * DPI;
+
+    palette.originals.forEach((original, index) => {
+      const left = index === 0 ? 0 : bleedPx + index * colW;
+      const right = index === 5 ? canvas.width : bleedPx + (index + 1) * colW;
+      ctx.fillStyle = sourceHex(original);
+      ctx.fillRect(left, 0, right - left + 1, bleedPx + stripPx);
+    });
+
     const image = await loadCorsImage(palette.printImage || palette.image);
-    drawCover(canvas.getContext("2d"), image, canvas.width, canvas.height);
+    const photoCanvas = document.createElement("canvas");
+    photoCanvas.width = canvas.width;
+    photoCanvas.height = Math.round(3 * DPI);
+    drawCover(photoCanvas.getContext("2d"), image, photoCanvas.width, photoCanvas.height);
+    ctx.drawImage(photoCanvas, 0, bleedPx + stripPx, canvas.width, photoCanvas.height);
+
+    palette.markers.forEach((marker, index) => {
+      const left = index === 0 ? 0 : bleedPx + index * colW;
+      const right = index === 5 ? canvas.width : bleedPx + (index + 1) * colW;
+      ctx.fillStyle = marker.hex;
+      ctx.fillRect(left, bleedPx + 4 * DPI, right - left + 1, canvas.height - (bleedPx + 4 * DPI));
+    });
+
     return canvas;
   }
 
   async function renderBackCanvas(palette) {
     if (document.fonts?.load) {
-      await Promise.allSettled([document.fonts.load("800 34px Inter"), document.fonts.load("600 28px Inter")]);
+      await Promise.allSettled([
+        document.fonts.load("800 34px Inter"),
+        document.fonts.load("600 28px Inter")
+      ]);
     }
 
     const canvas = document.createElement("canvas");
@@ -139,110 +171,99 @@
     return canvas;
   }
 
-  function setFill(doc, hex) {
-    const [r, g, b] = hexRgb(hex);
-    doc.setFillColor(r, g, b);
-  }
+  function drawCropMarks(doc, artX, artY) {
+    const trimLeft = artX + BLEED;
+    const trimTop = artY + BLEED;
+    const trimRight = trimLeft + TRIM_W;
+    const trimBottom = trimTop + TRIM_H;
+    const outside = .095;
+    const gap = .025;
 
-  function swatchBounds(index) {
-    const colW = TRIM_W / 6;
-    const left = index === 0 ? ART_X : TRIM_X + index * colW;
-    const right = index === 5 ? PAGE_W - ART_X : TRIM_X + (index + 1) * colW;
-    return { left, width: right - left };
-  }
-
-  function drawFront(doc, palette, photoCanvas) {
-    palette.originals.forEach((original, index) => {
-      const { left, width } = swatchBounds(index);
-      setFill(doc, sourceHex(original));
-      doc.rect(left, ART_Y, width + .002, TRIM_Y + STRIP_H - ART_Y, "F");
-    });
-
-    doc.addImage(photoCanvas.toDataURL("image/jpeg", .94), "JPEG", ART_X, TRIM_Y + STRIP_H, ART_W, 3, undefined, "FAST");
-
-    palette.markers.forEach((marker, index) => {
-      const { left, width } = swatchBounds(index);
-      setFill(doc, marker.hex);
-      const y = TRIM_Y + 4;
-      doc.rect(left, y, width + .002, PAGE_H - ART_Y - y, "F");
-    });
-  }
-
-  function drawCropMarks(doc) {
-    const right = TRIM_X + TRIM_W;
-    const bottom = TRIM_Y + TRIM_H;
-    const outerRight = PAGE_W - SLUG;
-    const outerBottom = PAGE_H - SLUG;
-    doc.setDrawColor(35, 35, 35);
+    doc.setDrawColor(45, 45, 45);
     doc.setLineWidth(.006);
-    doc.line(0, TRIM_Y, SLUG, TRIM_Y);
-    doc.line(outerRight, TRIM_Y, PAGE_W, TRIM_Y);
-    doc.line(0, bottom, SLUG, bottom);
-    doc.line(outerRight, bottom, PAGE_W, bottom);
-    doc.line(TRIM_X, 0, TRIM_X, SLUG);
-    doc.line(right, 0, right, SLUG);
-    doc.line(TRIM_X, outerBottom, TRIM_X, PAGE_H);
-    doc.line(right, outerBottom, right, PAGE_H);
+
+    doc.line(artX - outside, trimTop, artX - gap, trimTop);
+    doc.line(artX + ART_W + gap, trimTop, artX + ART_W + outside, trimTop);
+    doc.line(artX - outside, trimBottom, artX - gap, trimBottom);
+    doc.line(artX + ART_W + gap, trimBottom, artX + ART_W + outside, trimBottom);
+
+    doc.line(trimLeft, artY - outside, trimLeft, artY - gap);
+    doc.line(trimRight, artY - outside, trimRight, artY - gap);
+    doc.line(trimLeft, artY + ART_H + gap, trimLeft, artY + ART_H + outside);
+    doc.line(trimRight, artY + ART_H + gap, trimRight, artY + ART_H + outside);
   }
 
-  function drawSlug(doc, index, face) {
-    doc.setTextColor(70, 70, 70);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(4.8);
-    const number = String(index + 1).padStart(3, "0");
-    doc.text(
-      `CARD ${number} ${face.toUpperCase()} • 4 × 5 in trim • 0.125 in bleed • 300 ppi RGB • ${ROUND_CORNER_MM} mm round corners • NO SCALING`,
-      PAGE_W / 2,
-      PAGE_H - .035,
-      { align: "center" }
-    );
-  }
-
-  function addArtPage(doc, firstPage) {
+  function addSheet(doc, firstPage) {
     if (!firstPage) doc.addPage([PAGE_W, PAGE_H], "portrait");
     doc.setFillColor(255, 255, 255);
     doc.rect(0, 0, PAGE_W, PAGE_H, "F");
   }
 
+  async function placeCard(doc, palette, slotIndex, face) {
+    const x = SLOT_X;
+    const y = SLOT_Y[slotIndex];
+    const canvas = face === "front"
+      ? await renderFrontCanvas(palette)
+      : await renderBackCanvas(palette);
+    const format = face === "front" ? "JPEG" : "PNG";
+    const data = face === "front"
+      ? canvas.toDataURL("image/jpeg", .94)
+      : canvas.toDataURL("image/png");
+
+    doc.addImage(data, format, x, y, ART_W, ART_H, undefined, "FAST");
+    drawCropMarks(doc, x, y);
+  }
+
   async function exportPrintShopPdf() {
     const palettes = palettesForExport();
-    if (!palettes.length) { showToast("There are no palettes to export at the current match setting."); return; }
+    if (!palettes.length) {
+      showToast("There are no palettes to export at the current match setting.");
+      return;
+    }
 
     const button = document.getElementById("exportPdfButton");
     if (button) button.disabled = true;
-    showToast("Building printer-ready PDF…");
+    showToast("Building Staples-ready PDF…");
 
     try {
       const jsPDF = await loadJsPdf();
-      const doc = new jsPDF({ unit: "in", format: [PAGE_W, PAGE_H], orientation: "portrait", compress: true, putOnlyUsedFonts: true, precision: 4 });
+      const doc = new jsPDF({
+        unit: "in",
+        format: "letter",
+        orientation: "portrait",
+        compress: true,
+        putOnlyUsedFonts: true,
+        precision: 4
+      });
+
       doc.setProperties({
-        title: "Ohuhu Palette Cards - Print Shop Master",
-        subject: "4 × 5 inch cards; 0.125 inch bleed; crop marks; 300 ppi RGB; 3 mm rounded corners; alternating front/back pages; printer handles imposition and CMYK/PDF-X conversion",
+        title: "Ohuhu Palette Cards - Staples Letter Master",
+        subject: "8.5 x 11 inch duplex sheets; two square 4 x 5 inch cards per side; 0.125 inch bleed; crop marks; 300 ppi RGB; fronts and backs paired for long-edge duplex printing",
         creator: "Photo Palette Maker",
-        keywords: "print-ready, 4x5, bleed, crop marks, duplex, palette cards"
+        keywords: "Staples, letter, 4x5, bleed, crop marks, duplex, square palette cards"
       });
 
       let firstPage = true;
-      for (let index = 0; index < palettes.length; index += 1) {
-        const palette = palettes[index];
-        const photoCanvas = await renderPhotoCanvas(palette);
-        addArtPage(doc, firstPage);
-        firstPage = false;
-        drawFront(doc, palette, photoCanvas);
-        drawCropMarks(doc);
-        drawSlug(doc, index, "front");
+      for (let offset = 0; offset < palettes.length; offset += 2) {
+        const batch = palettes.slice(offset, offset + 2);
 
-        const backCanvas = await renderBackCanvas(palette);
-        addArtPage(doc, false);
-        doc.addImage(backCanvas.toDataURL("image/png"), "PNG", ART_X, ART_Y, ART_W, ART_H, undefined, "FAST");
-        drawCropMarks(doc);
-        drawSlug(doc, index, "back");
+        addSheet(doc, firstPage);
+        firstPage = false;
+        for (let i = 0; i < batch.length; i += 1) {
+          await placeCard(doc, batch[i], i, "front");
+        }
+
+        addSheet(doc, false);
+        for (let i = 0; i < batch.length; i += 1) {
+          await placeCard(doc, batch[i], i, "back");
+        }
+
         await new Promise(resolve => setTimeout(resolve, 0));
       }
 
       const stamp = new Date().toISOString().slice(0, 10);
-      doc.save(`ohuhu-palette-cards-PRINT-SHOP-4x5-${stamp}.pdf`);
-      showToast(`Print-shop PDF exported: ${palettes.length} cards, fronts and backs paired.`);
+      doc.save(`ohuhu-palette-cards-STAPLES-letter-${stamp}.pdf`);
+      showToast(`Staples PDF exported: ${palettes.length} square cards, two per Letter sheet side.`);
     } catch (error) {
       console.error("PDF export failed", error);
       showToast("PDF export failed. Try again after the images finish loading.");
@@ -254,6 +275,7 @@
   function replaceExportControl() {
     const oldButton = document.getElementById("exportPdfButton");
     if (!oldButton) return;
+
     const button = oldButton.cloneNode(true);
     oldButton.replaceWith(button);
     button.innerHTML = '<i data-lucide="file-down"></i>Print shop PDF';
@@ -261,7 +283,7 @@
 
     const note = document.querySelector(".pdf-export-note");
     if (note) {
-      note.textContent = "Printer master: individual 4 × 5 in cards, 0.125 in bleed, crop marks, 300 ppi, paired front/back pages and 3 mm corner-round spec. RGB is intentional so the print shop can apply its own CMYK/PDF-X press profile and impose the sheets.";
+      note.textContent = "Staples-ready Letter PDF: two square 4 × 5 in cards per side, 0.125 in bleed, crop marks, 300 ppi RGB, paired fronts/backs. Choose double-sided printing and flip on the long edge.";
       note.style.maxWidth = "620px";
       note.style.fontSize = "12px";
       note.style.lineHeight = "1.4";
