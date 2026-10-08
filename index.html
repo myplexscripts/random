@@ -3,359 +3,61 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#f6f4ef">
-  <meta name="description" content="Generate printable colour palettes from the Ohuhu Oahu 100 marker set.">
-  <title>Ohuhu Oahu Palette Lab</title>
+  <meta name="theme-color" content="#f4f3ef">
+  <meta name="description" content="Automatically turn source photos into six-colour Ohuhu Oahu marker palettes.">
+  <title>Photo Palette Maker</title>
   <link rel="stylesheet" href="styles.css">
-  <style>
-    [hidden] { display: none !important; }
-    .palette-empty { min-height: 120px; }
-
-    .presets {
-      margin-top: 18px;
-      padding: 20px;
-    }
-    .preset-heading {
-      align-items: flex-end;
-    }
-    .preset-heading-copy {
-      max-width: 720px;
-    }
-    .preset-heading .section-copy {
-      margin-top: 7px;
-    }
-    .preset-count {
-      flex: 0 0 auto;
-      color: var(--muted);
-      font-size: 14px;
-      font-weight: 700;
-      white-space: nowrap;
-    }
-    .preset-filters {
-      display: flex;
-      gap: 8px;
-      margin-top: 18px;
-      padding-bottom: 3px;
-      overflow-x: auto;
-      overscroll-behavior-inline: contain;
-      scrollbar-width: none;
-    }
-    .preset-filters::-webkit-scrollbar { display: none; }
-    .preset-filter {
-      min-height: 44px;
-      flex: 0 0 auto;
-      padding: 0 15px;
-      border: 1px solid var(--line-strong);
-      border-radius: 999px;
-      background: #fff;
-      color: var(--ink);
-      font-size: 14px;
-      font-weight: 740;
-      cursor: pointer;
-    }
-    .preset-filter.active {
-      border-color: var(--accent);
-      background: var(--accent);
-      color: var(--accent-ink);
-    }
-    .preset-grid {
-      display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .preset-card {
-      min-width: 0;
-      min-height: 152px;
-      padding: 0;
-      overflow: hidden;
-      border: 1px solid var(--line);
-      border-radius: 16px;
-      background: #fff;
-      text-align: left;
-      cursor: pointer;
-      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
-    }
-    .preset-card:hover {
-      border-color: var(--line-strong);
-      box-shadow: 0 7px 20px rgba(28, 29, 25, .07);
-      transform: translateY(-1px);
-    }
-    .preset-card:active { transform: scale(.99); }
-    .preset-strip {
-      width: 100%;
-      height: 86px;
-      display: flex;
-    }
-    .preset-strip > span {
-      min-width: 0;
-      flex: 1;
-    }
-    .preset-card-copy {
-      display: block;
-      padding: 11px 12px 12px;
-    }
-    .preset-title-row {
-      display: flex;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 10px;
-    }
-    .preset-title-row strong {
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-      font-size: 15px;
-      letter-spacing: -.01em;
-    }
-    .preset-origin {
-      flex: 0 0 auto;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .preset-codes {
-      display: block;
-      margin-top: 5px;
-      overflow: hidden;
-      color: var(--muted);
-      font-size: 14px;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .preset-loading {
-      grid-column: 1 / -1;
-      min-height: 132px;
-      display: grid;
-      place-items: center;
-      border: 1px dashed var(--line-strong);
-      border-radius: 14px;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .preset-note {
-      margin: 14px 0 0;
-      color: var(--muted);
-      font-size: 14px;
-    }
-    .preset-note a {
-      color: inherit;
-      font-weight: 700;
-      text-underline-offset: 2px;
-    }
-
-    @media (max-width: 900px) {
-      .preset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    }
-    @media (max-width: 560px) {
-      .palette-empty { min-height: 96px; }
-      .presets { padding: 14px; }
-      .preset-heading { align-items: flex-start; }
-      .preset-count { margin-top: 2px; }
-      .preset-grid { grid-template-columns: 1fr; }
-      .preset-strip { height: 76px; }
-      .preset-card { min-height: 142px; }
-    }
-  </style>
 </head>
 <body>
   <main class="app-shell">
     <header class="app-header">
       <div>
-        <p class="eyebrow">Oahu 100 marker set</p>
-        <h1>Palette Lab</h1>
-        <p class="subtitle">Build palettes from your exact 100-colour set, match colours from a photo, and print swatch cards four per letter-size page.</p>
+        <p class="eyebrow">Ohuhu Oahu 100</p>
+        <h1>Photo Palette Maker</h1>
+        <p class="subtitle">Automatically finds photos, rejects poor marker matches, and builds six-colour palettes using only your calibrated marker set.</p>
       </div>
-      <div class="load-pill" id="loadPill" aria-live="polite">
-        <span class="status-dot" aria-hidden="true"></span>
-        <span id="loadText">Loading marker data…</span>
-      </div>
+      <div class="status-pill" id="sourceStatus" aria-live="polite"><span class="status-dot"></span><span>Ready</span></div>
     </header>
 
-    <section class="workspace" aria-label="Palette generator">
-      <div class="control-panel surface">
-        <div class="segmented" role="tablist" aria-label="Palette source">
-          <button class="segment active" id="generateTab" type="button" role="tab" aria-selected="true" data-mode="generate">
-            <i data-lucide="sparkles" aria-hidden="true"></i>
-            Generate
-          </button>
-          <button class="segment" id="imageTab" type="button" role="tab" aria-selected="false" data-mode="image">
-            <i data-lucide="image" aria-hidden="true"></i>
-            Image match
-          </button>
-        </div>
-
-        <div id="generateControls" class="mode-panel active">
-          <div class="field-grid">
-            <label class="field">
-              <span>Palette style</span>
-              <select id="styleSelect">
-                <option value="random">Totally random</option>
-                <option value="similar">Similar colours</option>
-                <option value="warm">Warm colours</option>
-                <option value="cool">Cool colours</option>
-                <option value="pastel">Pastel colours</option>
-                <option value="vivid">Vivid colours</option>
-                <option value="moody">Moody colours</option>
-                <option value="neutrals">Neutral colours</option>
-              </select>
-            </label>
-            <label class="field">
-              <span>Colours</span>
-              <select id="sizeSelect">
-                <option>3</option>
-                <option>4</option>
-                <option selected>5</option>
-                <option>6</option>
-                <option>7</option>
-                <option>8</option>
-              </select>
-            </label>
-          </div>
-
-          <button class="primary-button full" id="generateButton" type="button">
-            <i data-lucide="wand-sparkles" aria-hidden="true"></i>
-            Generate palette
-          </button>
-        </div>
-
-        <div id="imageControls" class="mode-panel" hidden>
-          <label class="upload-zone" id="uploadZone" for="imageInput">
-            <input id="imageInput" type="file" accept="image/*" hidden>
-            <div class="upload-empty" id="uploadEmpty">
-              <i data-lucide="image-plus" aria-hidden="true"></i>
-              <strong>Choose a reference image</strong>
-              <span>It stays on your device. The browser samples it locally.</span>
-            </div>
-            <img id="imagePreview" alt="Selected reference" hidden>
-          </label>
-          <button class="primary-button full" id="matchButton" type="button" disabled>
-            <i data-lucide="scan-search" aria-hidden="true"></i>
-            Match image to markers
-          </button>
-        </div>
-
-        <div class="mini-note">
-          <i data-lucide="info" aria-hidden="true"></i>
-          <span>Printed colours are only a digital guide. Use the blank box on each print card for your real marker swatch.</span>
-        </div>
+    <section class="generator-panel surface" aria-labelledby="generatorTitle">
+      <div class="generator-copy">
+        <p class="eyebrow">Automatic workflow</p>
+        <h2 id="generatorTitle">Generate photo palettes</h2>
+        <p>One click sources photos, analyses their colours, maps them to your markers, rejects weak results, and keeps only distinct six-marker palettes.</p>
       </div>
-
-      <div class="palette-panel surface">
-        <div class="panel-heading">
-          <div>
-            <p class="eyebrow" id="paletteKicker">Current palette</p>
-            <h2 id="paletteTitle">Ready to generate</h2>
-          </div>
-          <button class="icon-button" id="refreshButton" type="button" aria-label="Generate another palette" title="Generate another palette" disabled>
-            <i data-lucide="refresh-cw" aria-hidden="true"></i>
-          </button>
-        </div>
-
-        <div class="palette-empty" id="paletteEmpty">
-          <div class="empty-stack" aria-hidden="true">
-            <span></span><span></span><span></span><span></span><span></span>
-          </div>
-          <p>Your palette will appear here.</p>
-        </div>
-
-        <div class="palette-list" id="paletteList" aria-live="polite"></div>
-
-        <div class="palette-actions" id="paletteActions" hidden>
-          <button class="secondary-button" id="copyButton" type="button">
-            <i data-lucide="copy" aria-hidden="true"></i>
-            Copy codes
-          </button>
-          <button class="secondary-button" id="sortButton" type="button">
-            <i data-lucide="arrow-up-down" aria-hidden="true"></i>
-            Sort by colour
-          </button>
-          <button class="primary-button" id="addPrintButton" type="button">
-            <i data-lucide="plus" aria-hidden="true"></i>
-            Add print card
-          </button>
-        </div>
+      <div class="generator-actions">
+        <label class="field"><span>Palettes</span><select id="targetCount"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option></select></label>
+        <button class="primary-button" id="generateButton" type="button"><i data-lucide="sparkles"></i><span>Generate palettes</span></button>
+        <button class="secondary-button" id="stopButton" type="button" hidden><i data-lucide="square"></i>Stop</button>
+      </div>
+      <div class="progress-wrap" id="progressWrap" hidden>
+        <div class="progress-row"><strong id="progressLabel">Starting...</strong><span id="progressMeta"></span></div>
+        <div class="progress-track"><span id="progressBar"></span></div>
       </div>
     </section>
 
-    <section class="presets surface" aria-labelledby="presetTitle">
-      <div class="panel-heading preset-heading">
-        <div class="preset-heading-copy">
-          <p class="eyebrow">Curated matches</p>
-          <h2 id="presetTitle">Preset palettes</h2>
-          <p class="section-copy">Beautiful combinations from popular palette sites, automatically matched to the nearest colours in your Oahu 100 set.</p>
-        </div>
-        <span class="preset-count" id="presetCount"></span>
-      </div>
-
-      <div class="preset-filters" id="presetFilters" aria-label="Filter preset palettes">
-        <button class="preset-filter active" type="button" data-preset-filter="all" aria-pressed="true">All</button>
-        <button class="preset-filter" type="button" data-preset-filter="soft" aria-pressed="false">Soft</button>
-        <button class="preset-filter" type="button" data-preset-filter="nature" aria-pressed="false">Nature</button>
-        <button class="preset-filter" type="button" data-preset-filter="warm" aria-pressed="false">Warm</button>
-        <button class="preset-filter" type="button" data-preset-filter="cool" aria-pressed="false">Cool</button>
-        <button class="preset-filter" type="button" data-preset-filter="bold" aria-pressed="false">Bold</button>
-        <button class="preset-filter" type="button" data-preset-filter="dark" aria-pressed="false">Dark</button>
-        <button class="preset-filter" type="button" data-preset-filter="neutral" aria-pressed="false">Neutral</button>
-      </div>
-
-      <div class="preset-grid" id="presetGrid">
-        <div class="preset-loading">Matching presets to your markers…</div>
-      </div>
-
-      <p class="preset-note">Palette inspirations are drawn from popular combinations on <a href="https://colorhunt.co/palettes/popular" target="_blank" rel="noreferrer">Color Hunt</a> and selected <a href="https://coolors.co/" target="_blank" rel="noreferrer">Coolors</a> palettes. The colours shown here are the closest unique marker matches available in your set.</p>
-    </section>
-
-    <section class="print-tray surface" aria-labelledby="printTrayTitle">
-      <div class="panel-heading tray-heading">
-        <div>
-          <p class="eyebrow">US Letter · 8.5 × 11 in</p>
-          <h2 id="printTrayTitle">Print sheet</h2>
-          <p class="section-copy">Cards are arranged four per page with no sheet header or title.</p>
-        </div>
-        <div class="tray-actions">
-          <button class="secondary-button" id="clearPrintButton" type="button" disabled>Clear</button>
-          <button class="primary-button" id="printButton" type="button" disabled>
-            <i data-lucide="printer" aria-hidden="true"></i>
-            Print
-          </button>
+    <section class="library" aria-labelledby="libraryTitle">
+      <div class="section-heading">
+        <div><p class="eyebrow">Generated collection</p><h2 id="libraryTitle">Photo palettes</h2><p class="section-copy" id="libraryCopy">No generated palettes yet.</p></div>
+        <div class="section-actions">
+          <button class="secondary-button" id="printButton" type="button" disabled><i data-lucide="printer"></i>Print all</button>
+          <button class="secondary-button danger-button" id="clearButton" type="button" disabled><i data-lucide="trash-2"></i>Clear</button>
         </div>
       </div>
-      <div class="saved-grid" id="savedGrid">
-        <div class="saved-empty" id="savedEmpty">Add palettes here before printing.</div>
-      </div>
+      <div class="empty-state surface" id="emptyState"><i data-lucide="image"></i><strong>Generate your first batch</strong><span>The app will source and filter the photos for you.</span></div>
+      <div class="palette-grid" id="paletteGrid" aria-live="polite"></div>
     </section>
 
     <details class="marker-browser surface">
-      <summary>
-        <span>
-          <span class="eyebrow">Your set</span>
-          <strong>Browse all 100 markers</strong>
-        </span>
-        <i data-lucide="chevron-down" aria-hidden="true"></i>
-      </summary>
-      <div class="browser-controls">
-        <label class="search-field">
-          <i data-lucide="search" aria-hidden="true"></i>
-          <input id="markerSearch" type="search" placeholder="Search code or colour name" autocomplete="off">
-        </label>
-        <span class="result-count" id="resultCount">100 markers</span>
-      </div>
+      <summary><span><span class="eyebrow">Marker constraint</span><strong>Your calibrated 100-colour set</strong></span><i data-lucide="chevron-down"></i></summary>
       <div class="marker-grid" id="markerGrid"></div>
     </details>
 
-    <footer class="app-footer">
-      <p>Restricted to the official Ohuhu Oahu 100 set. Palette filter thresholds follow the MysticSparkleWings Ohuhu Palette Generator logic.</p>
-    </footer>
+    <footer class="app-footer"><p>Photo sources are queried automatically from open image services. Source and licence details remain attached to each card.</p></footer>
   </main>
-
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
-  <div id="printRoot" aria-hidden="true"></div>
-  <canvas id="sampleCanvas" hidden></canvas>
-
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
-  <script src="app.js"></script>
   <script src="marker-colour-calibration.js"></script>
-  <script src="preset-palettes.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
