@@ -1,0 +1,285 @@
+(() => {
+  const PRINT_PAPER_STORAGE = "oahu-print-paper-size";
+  const CARD_W = 3.5;
+  const CARD_H = 5;
+  const PAGE_MARGIN = .25;
+  const CARD_GAP = .16;
+
+  const PAPERS = {
+    letter: { label: "Letter (8.5 × 11 in)", width: 8.5, height: 11 },
+    a4: { label: "A4 (210 × 297 mm)", width: 8.2677, height: 11.6929 },
+    legal: { label: "Legal (8.5 × 14 in)", width: 8.5, height: 14 },
+    tabloid: { label: "Tabloid (11 × 17 in)", width: 11, height: 17 },
+    a3: { label: "A3 (297 × 420 mm)", width: 11.6929, height: 16.5354 }
+  };
+
+  const nativePrint = window.print.bind(window);
+
+  function threshold() {
+    const slider = document.getElementById("matchThreshold");
+    return Math.max(85, Math.min(100, Number(slider?.value || 85)));
+  }
+
+  function visiblePalettes() {
+    const minimum = threshold();
+    return state.palettes.filter(palette =>
+      palette?.source === "Unsplash"
+      && Number(palette.score) >= minimum
+      && Array.isArray(palette.originals)
+      && palette.originals.length === 6
+      && Array.isArray(palette.markers)
+      && palette.markers.length === 6
+    );
+  }
+
+  function originalHex(original) {
+    return typeof original === "string" ? original : original?.hex || "#FFFFFF";
+  }
+
+  function originalStrip(palette, reverse = false, className = "") {
+    const colours = palette.originals.map(originalHex);
+    if (reverse) colours.reverse();
+    return `<div class="front-swatch-row ${className}">${colours.map(hex => `<div class="front-swatch" style="background:${hex}"></div>`).join("")}</div>`;
+  }
+
+  function markerStrip(palette, reverse = false, className = "") {
+    const markers = [...palette.markers];
+    if (reverse) markers.reverse();
+    return `<div class="front-swatch-row ${className}">${markers.map(marker => `<div class="front-swatch" style="background:${marker.hex}"></div>`).join("")}</div>`;
+  }
+
+  function buildBackRows(palette) {
+    return [...palette.markers].map((marker, index) => ({ marker, original: palette.originals[index] }))
+      .reverse()
+      .map(({ marker, original }) => `
+        <div class="back-swatch-row">
+          <div class="back-marker-colour" style="background:${marker.hex}"></div>
+          <div class="back-marker-copy">
+            <strong>${escapeHtml(marker.code)}</strong>
+            <span>${escapeHtml(marker.name || marker.code)}</span>
+          </div>
+          <div class="back-original-colour" style="background:${originalHex(original)}"></div>
+        </div>`)
+      .join("");
+  }
+
+  renderPalettes = function renderCardsWithMirroredBacks() {
+    const minimum = threshold();
+    const visible = visiblePalettes();
+
+    els.paletteGrid.innerHTML = "";
+    els.emptyState.hidden = visible.length > 0;
+    els.printButton.disabled = els.clearButton.disabled = state.palettes.length === 0;
+    els.libraryCopy.textContent = visible.length
+      ? `${visible.length} palette${visible.length === 1 ? "" : "s"} at ${minimum}% or higher.`
+      : `No saved palettes meet the ${minimum}% minimum.`;
+
+    visible.forEach(palette => {
+      const article = document.createElement("article");
+      article.className = "palette-card palette-card-double";
+      article.dataset.face = "front";
+      article.innerHTML = `
+        <section class="card-face card-front" aria-label="Palette card front">
+          ${originalStrip(palette, false, "original-swatch-row")}
+          <div class="photo-wrap">
+            <img src="${escapeAttr(palette.image)}" alt="Source photo for ${escapeAttr(palette.subject)}" loading="lazy" referrerpolicy="no-referrer">
+            <span class="score-badge">${palette.score}% match</span>
+          </div>
+          ${markerStrip(palette, false, "matched-swatch-row")}
+          <div class="palette-meta"><strong>${escapeHtml(titleCase(palette.subject))}</strong><span>${escapeHtml(palette.licence || palette.source)}</span></div>
+          <div class="card-footer card-controls">
+            <a class="source-link" href="${escapeAttr(palette.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(`${palette.source} · ${palette.creator}`)}</a>
+            <div class="card-action-group">
+              <button class="card-flip secondary-button" type="button"><i data-lucide="rotate-cw"></i><span>Back</span></button>
+              <button class="card-remove" type="button" aria-label="Remove palette"><i data-lucide="x"></i></button>
+            </div>
+          </div>
+        </section>
+        <section class="card-face card-back" aria-label="Palette card back">
+          ${originalStrip(palette, true, "back-top-palette")}
+          <div class="back-palette-grid">${buildBackRows(palette)}</div>
+          ${markerStrip(palette, true, "back-bottom-palette")}
+          <div class="back-card-footer card-controls">
+            <button class="card-flip secondary-button" type="button"><i data-lucide="rotate-ccw"></i><span>Front</span></button>
+          </div>
+        </section>`;
+
+      article.querySelectorAll(".card-flip").forEach(button => {
+        button.addEventListener("click", () => {
+          article.dataset.face = article.dataset.face === "front" ? "back" : "front";
+        });
+      });
+      article.querySelector(".card-remove")?.addEventListener("click", () => removePalette(palette.id));
+      els.paletteGrid.appendChild(article);
+    });
+
+    updatePrintSummary();
+    refreshIcons();
+  };
+
+  function fitFor(width, height) {
+    const usableW = width - PAGE_MARGIN * 2;
+    const usableH = height - PAGE_MARGIN * 2;
+    const cols = Math.max(1, Math.floor((usableW + CARD_GAP) / (CARD_W + CARD_GAP)));
+    const rows = Math.max(1, Math.floor((usableH + CARD_GAP) / (CARD_H + CARD_GAP)));
+    return { width, height, cols, rows, capacity: cols * rows };
+  }
+
+  function bestPaperLayout(paper) {
+    const portrait = fitFor(paper.width, paper.height);
+    const landscape = fitFor(paper.height, paper.width);
+    if (landscape.capacity > portrait.capacity) return { ...landscape, orientation: "landscape" };
+    return { ...portrait, orientation: "portrait" };
+  }
+
+  function selectedPaper() {
+    const key = document.getElementById("printPaperSize")?.value || "letter";
+    return { key, paper: PAPERS[key] || PAPERS.letter };
+  }
+
+  function injectPrintControls() {
+    const actions = document.querySelector(".section-actions");
+    const printButton = document.getElementById("printButton");
+    if (!actions || !printButton || document.getElementById("printPaperSize")) return;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "print-settings-control";
+    wrapper.innerHTML = `
+      <label for="printPaperSize">
+        <span>Paper</span>
+        <select id="printPaperSize" aria-label="Paper size for printing">
+          ${Object.entries(PAPERS).map(([key, paper]) => `<option value="${key}">${paper.label}</option>`).join("")}
+        </select>
+      </label>
+      <span class="print-layout-summary" id="printLayoutSummary"></span>`;
+
+    actions.insertBefore(wrapper, printButton);
+    const select = wrapper.querySelector("select");
+    const saved = localStorage.getItem(PRINT_PAPER_STORAGE);
+    if (saved && PAPERS[saved]) select.value = saved;
+    select.addEventListener("change", () => {
+      localStorage.setItem(PRINT_PAPER_STORAGE, select.value);
+      updatePrintSummary();
+    });
+    updatePrintSummary();
+  }
+
+  function updatePrintSummary() {
+    const summary = document.getElementById("printLayoutSummary");
+    if (!summary) return;
+    const { paper } = selectedPaper();
+    const layout = bestPaperLayout(paper);
+    summary.textContent = `${layout.capacity} cards/sheet · 3.5 × 5 in · ${layout.orientation}`;
+  }
+
+  function printStrip(items, key) {
+    return `<div class="print-strip">${items.map(item => `<div style="background:${item[key] || item}"></div>`).join("")}</div>`;
+  }
+
+  function printFrontCard(palette) {
+    const originals = palette.originals.map(original => ({ hex: originalHex(original) }));
+    return `
+      <article class="print-card print-card-front">
+        ${printStrip(originals, "hex")}
+        <div class="print-photo"><img src="${escapeAttr(palette.image)}" alt=""></div>
+        ${printStrip(palette.markers, "hex")}
+        <div class="print-card-caption"><strong>${escapeHtml(titleCase(palette.subject))}</strong><span>${palette.score}%</span></div>
+      </article>`;
+  }
+
+  function printBackCard(palette) {
+    const pairs = palette.markers.map((marker, index) => ({ marker, original: originalHex(palette.originals[index]) })).reverse();
+    const reversedOriginals = pairs.map(pair => ({ hex: pair.original }));
+    const reversedMarkers = pairs.map(pair => pair.marker);
+    return `
+      <article class="print-card print-card-back">
+        ${printStrip(reversedOriginals, "hex")}
+        <div class="print-back-list">
+          ${pairs.map(({ marker, original }) => `
+            <div class="print-back-row">
+              <div class="print-back-marker" style="background:${marker.hex}"></div>
+              <div class="print-back-copy"><strong>${escapeHtml(marker.code)}</strong><span>${escapeHtml(marker.name || marker.code)}</span></div>
+              <div class="print-back-original" style="background:${original}"></div>
+            </div>`).join("")}
+        </div>
+        ${printStrip(reversedMarkers, "hex")}
+      </article>`;
+  }
+
+  function buildPrintSheet(slots, face, layout, paperIndex) {
+    return `
+      <section class="print-sheet print-sheet-${face}" data-sheet="${paperIndex}" style="--paper-w:${layout.width}in;--paper-h:${layout.height}in;--cols:${layout.cols};--rows:${layout.rows};">
+        <div class="print-sheet-grid">
+          ${slots.map(palette => palette
+            ? `<div class="print-slot">${face === "front" ? printFrontCard(palette) : printBackCard(palette)}</div>`
+            : `<div class="print-slot print-slot-empty"></div>`).join("")}
+        </div>
+      </section>`;
+  }
+
+  function preparePrintPages() {
+    const palettes = visiblePalettes();
+    if (!palettes.length) {
+      showToast("There are no palettes to print at the current match setting.");
+      return false;
+    }
+
+    const { paper } = selectedPaper();
+    const layout = bestPaperLayout(paper);
+    const capacity = layout.capacity;
+    const pages = [];
+
+    for (let offset = 0, sheetIndex = 0; offset < palettes.length; offset += capacity, sheetIndex += 1) {
+      const batch = palettes.slice(offset, offset + capacity);
+      const frontSlots = new Array(capacity).fill(null);
+      const backSlots = new Array(capacity).fill(null);
+
+      batch.forEach((palette, index) => {
+        frontSlots[index] = palette;
+        const row = Math.floor(index / layout.cols);
+        const col = index % layout.cols;
+        const mirroredIndex = row * layout.cols + (layout.cols - 1 - col);
+        backSlots[mirroredIndex] = palette;
+      });
+
+      pages.push(buildPrintSheet(frontSlots, "front", layout, sheetIndex));
+      pages.push(buildPrintSheet(backSlots, "back", layout, sheetIndex));
+    }
+
+    let root = document.getElementById("printRoot");
+    if (!root) {
+      root = document.createElement("div");
+      root.id = "printRoot";
+      document.body.appendChild(root);
+    }
+    root.innerHTML = pages.join("");
+
+    let pageStyle = document.getElementById("dynamicPrintPageStyle");
+    if (!pageStyle) {
+      pageStyle = document.createElement("style");
+      pageStyle.id = "dynamicPrintPageStyle";
+      document.head.appendChild(pageStyle);
+    }
+    pageStyle.textContent = `@page { size: ${layout.width}in ${layout.height}in; margin: 0; }`;
+
+    return true;
+  }
+
+  window.print = function printPaletteCards() {
+    if (!preparePrintPages()) return;
+    showToast("For aligned backs: print double-sided, flip on long edge, at 100% / actual size.");
+    setTimeout(() => nativePrint(), 120);
+  };
+
+  window.addEventListener("afterprint", () => {
+    const root = document.getElementById("printRoot");
+    if (root) root.innerHTML = "";
+  });
+
+  document.addEventListener("DOMContentLoaded", () => {
+    injectPrintControls();
+    const footer = document.querySelector(".app-footer p");
+    if (footer) footer.textContent = "Cards print at a fixed 3.5 × 5 in size. Choose the paper size, then print double-sided with flip on long edge at 100% / actual size. Fronts and backs are automatically positioned to align.";
+    renderPalettes();
+  });
+})();
