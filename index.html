@@ -19,7 +19,7 @@
       <div>
         <p class="eyebrow">Ohuhu Oahu 100</p>
         <h1>Photo Palette Maker</h1>
-        <p class="subtitle">Finds beautiful Unsplash photos, chooses six colours actually present in each image, then matches those colours to your original digital Ohuhu marker set.</p>
+        <p class="subtitle">Finds beautiful Unsplash photos, chooses six prominent and visually distinct colours actually present in each image, then matches those colours to your original digital Ohuhu marker set.</p>
       </div>
       <div class="status-pill" id="sourceStatus" aria-live="polite"><span class="status-dot"></span><span>Ready</span></div>
     </header>
@@ -47,7 +47,7 @@
       <div class="generator-copy">
         <p class="eyebrow">Automatic workflow</p>
         <h2 id="generatorTitle">Generate photo palettes</h2>
-        <p>The app chooses six source colours first, checks that the image can still be represented cleanly with six colours, then matches each source colour to a nearby unique marker. The match percentage measures the colour pairing itself.</p>
+        <p>The app balances coverage, accent colours, contrast and colour diversity, then builds a varied collection across pastel, vivid, moody, earthy, warm, cool, neutral and balanced palettes.</p>
       </div>
       <div class="generator-actions">
         <label class="field"><span>Palettes</span><select id="targetCount"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option></select></label>
@@ -72,7 +72,7 @@
           <button class="secondary-button danger-button" id="clearButton" type="button" disabled><i data-lucide="trash-2"></i>Clear</button>
         </div>
       </div>
-      <div class="empty-state surface" id="emptyState"><i data-lucide="image"></i><strong>Generate your first batch</strong><span>The app will search, analyse, and filter Unsplash for you.</span></div>
+      <div class="empty-state surface" id="emptyState"><i data-lucide="image"></i><strong>Generate your first batch</strong><span>The app will search, analyse, balance, and filter Unsplash for you.</span></div>
       <div class="palette-grid" id="paletteGrid" aria-live="polite"></div>
     </section>
 
@@ -81,7 +81,7 @@
       <div class="marker-grid" id="markerGrid"></div>
     </details>
 
-    <footer class="app-footer"><p>Front: actual sampled photo colours above their marker matches. Back: marker codes and names paired with those same sampled colours. Unsplash is the only photo source.</p></footer>
+    <footer class="app-footer"><p>Cards are fixed at 4 × 5 in with duplex-aligned backs. Exported PDFs stay RGB so a print shop can convert them using the correct CMYK/PDF-X profile for its press and paper.</p></footer>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
@@ -90,6 +90,9 @@
   <script src="unsplash.js"></script>
   <script src="pairing-fix.js"></script>
   <script src="matching-engine.js"></script>
+  <script src="prominent-colour-engine.js"></script>
   <script src="card-layout.js"></script>
+  <script src="palette-variety.js"></script>
+  <script src="pdf-export.js"></script>
 </body>
 </html>
