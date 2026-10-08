@@ -10,8 +10,151 @@
   <style>
     [hidden] { display: none !important; }
     .palette-empty { min-height: 120px; }
+
+    .presets {
+      margin-top: 18px;
+      padding: 20px;
+    }
+    .preset-heading {
+      align-items: flex-end;
+    }
+    .preset-heading-copy {
+      max-width: 720px;
+    }
+    .preset-heading .section-copy {
+      margin-top: 7px;
+    }
+    .preset-count {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .preset-filters {
+      display: flex;
+      gap: 8px;
+      margin-top: 18px;
+      padding-bottom: 3px;
+      overflow-x: auto;
+      overscroll-behavior-inline: contain;
+      scrollbar-width: none;
+    }
+    .preset-filters::-webkit-scrollbar { display: none; }
+    .preset-filter {
+      min-height: 44px;
+      flex: 0 0 auto;
+      padding: 0 15px;
+      border: 1px solid var(--line-strong);
+      border-radius: 999px;
+      background: #fff;
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 740;
+      cursor: pointer;
+    }
+    .preset-filter.active {
+      border-color: var(--accent);
+      background: var(--accent);
+      color: var(--accent-ink);
+    }
+    .preset-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .preset-card {
+      min-width: 0;
+      min-height: 152px;
+      padding: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      background: #fff;
+      text-align: left;
+      cursor: pointer;
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .preset-card:hover {
+      border-color: var(--line-strong);
+      box-shadow: 0 7px 20px rgba(28, 29, 25, .07);
+      transform: translateY(-1px);
+    }
+    .preset-card:active { transform: scale(.99); }
+    .preset-strip {
+      width: 100%;
+      height: 86px;
+      display: flex;
+    }
+    .preset-strip > span {
+      min-width: 0;
+      flex: 1;
+    }
+    .preset-card-copy {
+      display: block;
+      padding: 11px 12px 12px;
+    }
+    .preset-title-row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .preset-title-row strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-size: 15px;
+      letter-spacing: -.01em;
+    }
+    .preset-origin {
+      flex: 0 0 auto;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .preset-codes {
+      display: block;
+      margin-top: 5px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 14px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .preset-loading {
+      grid-column: 1 / -1;
+      min-height: 132px;
+      display: grid;
+      place-items: center;
+      border: 1px dashed var(--line-strong);
+      border-radius: 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .preset-note {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .preset-note a {
+      color: inherit;
+      font-weight: 700;
+      text-underline-offset: 2px;
+    }
+
+    @media (max-width: 900px) {
+      .preset-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
     @media (max-width: 560px) {
       .palette-empty { min-height: 96px; }
+      .presets { padding: 14px; }
+      .preset-heading { align-items: flex-start; }
+      .preset-count { margin-top: 2px; }
+      .preset-grid { grid-template-columns: 1fr; }
+      .preset-strip { height: 76px; }
+      .preset-card { min-height: 142px; }
     }
   </style>
 </head>
@@ -135,6 +278,34 @@
       </div>
     </section>
 
+    <section class="presets surface" aria-labelledby="presetTitle">
+      <div class="panel-heading preset-heading">
+        <div class="preset-heading-copy">
+          <p class="eyebrow">Curated matches</p>
+          <h2 id="presetTitle">Preset palettes</h2>
+          <p class="section-copy">Beautiful combinations from popular palette sites, automatically matched to the nearest colours in your Oahu 100 set.</p>
+        </div>
+        <span class="preset-count" id="presetCount"></span>
+      </div>
+
+      <div class="preset-filters" id="presetFilters" aria-label="Filter preset palettes">
+        <button class="preset-filter active" type="button" data-preset-filter="all" aria-pressed="true">All</button>
+        <button class="preset-filter" type="button" data-preset-filter="soft" aria-pressed="false">Soft</button>
+        <button class="preset-filter" type="button" data-preset-filter="nature" aria-pressed="false">Nature</button>
+        <button class="preset-filter" type="button" data-preset-filter="warm" aria-pressed="false">Warm</button>
+        <button class="preset-filter" type="button" data-preset-filter="cool" aria-pressed="false">Cool</button>
+        <button class="preset-filter" type="button" data-preset-filter="bold" aria-pressed="false">Bold</button>
+        <button class="preset-filter" type="button" data-preset-filter="dark" aria-pressed="false">Dark</button>
+        <button class="preset-filter" type="button" data-preset-filter="neutral" aria-pressed="false">Neutral</button>
+      </div>
+
+      <div class="preset-grid" id="presetGrid">
+        <div class="preset-loading">Matching presets to your markers…</div>
+      </div>
+
+      <p class="preset-note">Palette inspirations are drawn from popular combinations on <a href="https://colorhunt.co/palettes/popular" target="_blank" rel="noreferrer">Color Hunt</a> and selected <a href="https://coolors.co/" target="_blank" rel="noreferrer">Coolors</a> palettes. The colours shown here are the closest unique marker matches available in your set.</p>
+    </section>
+
     <section class="print-tray surface" aria-labelledby="printTrayTitle">
       <div class="panel-heading tray-heading">
         <div>
@@ -184,5 +355,6 @@
 
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="app.js"></script>
+  <script src="preset-palettes.js"></script>
 </body>
 </html>

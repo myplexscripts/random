@@ -11,6 +11,7 @@ A mobile-friendly single-page palette generator built specifically for the curre
 - Palette sizes from 3 to 8 colours
 - Lock individual colours while regenerating
 - Local image upload and dominant-colour matching to the nearest Oahu marker
+- 20 curated preset palettes inspired by popular Color Hunt and Coolors combinations, automatically matched to the nearest unique Oahu 100 markers
 - Browse/search all 100 markers
 - Print queue with four palette cards per US Letter page
 - Blank hand-swatch area beside each printed colour
