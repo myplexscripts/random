@@ -6,9 +6,11 @@ A photo-first palette generator for the calibrated Ohuhu Oahu 100 marker set.
 
 - Uses Unsplash as the only photo source
 - Prompts for an Unsplash access key and stores it locally in the browser
+- Searches a broad subject library plus the original 53 palette names as extra Unsplash search terms
+- Includes a minimum match slider from 85% to 100%
 - Analyses source images locally in the browser
 - Converts photo samples and marker colours to OKLab for perceptual matching
-- Rejects every result below 85% marker compatibility
+- Rejects results below the selected marker compatibility threshold
 - Selects six distinct physical marker colours for every accepted photo
 - Rejects near-duplicate six-marker palettes
 - Keeps the Unsplash source and photographer attached to every card
