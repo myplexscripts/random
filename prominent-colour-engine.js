@@ -27,8 +27,6 @@
   function clusterSamples(samples, k = 18, iterations = 9) {
     if (samples.length < k) return [];
 
-    // Farthest-point seeding in OKLab captures small but visually distinct accents
-    // much better than seeding only by lightness.
     const sorted = [...samples].sort((a, b) => a.L - b.L);
     const centers = [{ ...sorted[Math.floor(sorted.length / 2)] }];
     while (centers.length < k) {
@@ -114,6 +112,83 @@
       .sort((a, b) => b.prominence - a.prominence || b.weight - a.weight);
   }
 
+  function nearestSelectionDistance(cluster, selected) {
+    return Math.min(...selected.map(chosen => oklabDistance(cluster.lab, chosen.lab)));
+  }
+
+  function regionMass(seed, clusters, radius = .085) {
+    return clusters.reduce((sum, cluster) =>
+      sum + (oklabDistance(seed.lab, cluster.lab) <= radius ? cluster.weight : 0), 0);
+  }
+
+  function compressionError(clusters, selected) {
+    return clusters.reduce((sum, cluster) =>
+      sum + nearestSelectionDistance(cluster, selected) * cluster.weight, 0);
+  }
+
+  function tooManyNearDuplicates(selected) {
+    let pairs = 0;
+    for (let i = 0; i < selected.length; i += 1) {
+      for (let j = i + 1; j < selected.length; j += 1) {
+        if (oklabDistance(selected[i].lab, selected[j].lab) < .045) pairs += 1;
+      }
+    }
+    return pairs > 1;
+  }
+
+  // Repair a palette when a sizeable colour region in the image is missing.
+  // This prevents a scene with a large blue ocean, green field, etc. from
+  // becoming six variations of the warmer half of the image.
+  function repairImageCoverage(clusters, selected) {
+    let current = [...selected];
+
+    for (let pass = 0; pass < 2; pass += 1) {
+      const omitted = clusters
+        .map(cluster => {
+          const nearest = nearestSelectionDistance(cluster, current);
+          const mass = regionMass(cluster, clusters);
+          return { cluster, nearest, mass, score: mass * nearest };
+        })
+        .filter(item => item.nearest > .10 && (item.mass >= .07 || item.cluster.weight >= .035))
+        .sort((a, b) => b.score - a.score)[0];
+
+      if (!omitted) break;
+
+      const currentError = compressionError(clusters, current);
+      let best = null;
+      let bestError = Infinity;
+
+      for (let index = 0; index < current.length; index += 1) {
+        const candidate = current.map((item, i) => i === index ? omitted.cluster : item);
+        const separation = Math.min(...candidate
+          .filter((_, i) => i !== index)
+          .map(other => oklabDistance(omitted.cluster.lab, other.lab)));
+        if (separation < .050 || tooManyNearDuplicates(candidate)) continue;
+
+        const error = compressionError(clusters, candidate);
+        if (error < bestError) {
+          bestError = error;
+          best = candidate;
+        }
+      }
+
+      if (!best) break;
+      const forceLargeRegion = omitted.mass >= .10 && bestError <= currentError + .008;
+      if (bestError < currentError - .001 || forceLargeRegion) current = best;
+      else break;
+    }
+
+    return current;
+  }
+
+  function hasMajorOmittedRegion(clusters, selected) {
+    return clusters.some(cluster => {
+      const nearest = nearestSelectionDistance(cluster, selected);
+      if (nearest <= .11) return false;
+      return regionMass(cluster, clusters) >= .085;
+    });
+  }
+
   function chooseSixSourceColours(clusters) {
     const pool = sortByProminence(clusters).slice(0, 18);
     if (pool.length < 6) return [];
@@ -164,18 +239,8 @@
       if (separation >= .055) selected.push(cluster);
     }
 
-    if (selected.length !== 6) return [];
-
-    const tooSimilarPairs = [];
-    for (let i = 0; i < selected.length; i++) {
-      for (let j = i + 1; j < selected.length; j++) {
-        const distance = oklabDistance(selected[i].lab, selected[j].lab);
-        if (distance < .045) tooSimilarPairs.push(distance);
-      }
-    }
-    if (tooSimilarPairs.length > 1) return [];
-
-    return selected.slice(0, 6);
+    if (selected.length !== 6 || tooManyNearDuplicates(selected)) return [];
+    return repairImageCoverage(clusters, selected.slice(0, 6));
   }
 
   function imageFitsSixColours(clusters, selected) {
@@ -184,17 +249,18 @@
     const selectedCoverage = selected.reduce((sum, cluster) => sum + cluster.weight, 0);
     const vividAccentCount = selected.filter(cluster => chroma(cluster.lab) >= .055).length;
     let farMass = 0;
-    let compressionError = 0;
+    let compressionErrorValue = 0;
 
     clusters.forEach(cluster => {
-      const nearest = Math.min(...selected.map(chosen => oklabDistance(cluster.lab, chosen.lab)));
-      compressionError += nearest * cluster.weight;
+      const nearest = nearestSelectionDistance(cluster, selected);
+      compressionErrorValue += nearest * cluster.weight;
       if (nearest > .12) farMass += cluster.weight;
     });
 
     if (selectedCoverage < .33 && farMass > .46) return false;
     if (farMass > .54) return false;
-    if (compressionError > .142) return false;
+    if (compressionErrorValue > .142) return false;
+    if (hasMajorOmittedRegion(clusters, selected)) return false;
 
     const imageHasAccent = clusters.some(cluster => chroma(cluster.lab) >= .065 && cluster.weight >= .006);
     if (imageHasAccent && vividAccentCount === 0) return false;
@@ -369,7 +435,8 @@
       originals: pairs.map(pair => ({ hex: labToHex(pair.source.lab) })),
       complexity: {
         selectedCoverage: pairs.reduce((sum, pair) => sum + pair.source.weight, 0),
-        minimumPairScore: Math.min(...similarities)
+        minimumPairScore: Math.min(...similarities),
+        compressionError: compressionError(clusters, sourceColours)
       }
     };
   };
