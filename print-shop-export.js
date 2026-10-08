@@ -10,6 +10,8 @@
   const TOTAL_H = CARD_H * 2 + SLOT_GAP;
   const SLOT_TOP = (PAGE_H - TOTAL_H) / 2;
   const SLOT_Y = [SLOT_TOP, SLOT_TOP + CARD_H + SLOT_GAP];
+  const CROP_GAP = .04;
+  const CROP_LEN = .12;
 
   function threshold() {
     return Math.max(85, Math.min(100, Number(document.getElementById("matchThreshold")?.value || 85)));
@@ -163,6 +165,23 @@
     doc.rect(0, 0, PAGE_W, PAGE_H, "F");
   }
 
+  function drawCropMarks(doc, x, y) {
+    const right = x + CARD_W;
+    const bottom = y + CARD_H;
+    doc.setDrawColor(45, 45, 45);
+    doc.setLineWidth(.005);
+
+    doc.line(x - CROP_GAP - CROP_LEN, y, x - CROP_GAP, y);
+    doc.line(right + CROP_GAP, y, right + CROP_GAP + CROP_LEN, y);
+    doc.line(x - CROP_GAP - CROP_LEN, bottom, x - CROP_GAP, bottom);
+    doc.line(right + CROP_GAP, bottom, right + CROP_GAP + CROP_LEN, bottom);
+
+    doc.line(x, y - CROP_GAP - CROP_LEN, x, y - CROP_GAP);
+    doc.line(right, y - CROP_GAP - CROP_LEN, right, y - CROP_GAP);
+    doc.line(x, bottom + CROP_GAP, x, bottom + CROP_GAP + CROP_LEN);
+    doc.line(right, bottom + CROP_GAP, right, bottom + CROP_GAP + CROP_LEN);
+  }
+
   async function placeCard(doc, palette, slotIndex, face) {
     const canvas = face === "front"
       ? await renderFrontCanvas(palette)
@@ -171,8 +190,11 @@
     const data = face === "front"
       ? canvas.toDataURL("image/jpeg", .95)
       : canvas.toDataURL("image/png");
+    const x = SLOT_X;
+    const y = SLOT_Y[slotIndex];
 
-    doc.addImage(data, format, SLOT_X, SLOT_Y[slotIndex], CARD_W, CARD_H, undefined, "FAST");
+    doc.addImage(data, format, x, y, CARD_W, CARD_H, undefined, "FAST");
+    drawCropMarks(doc, x, y);
   }
 
   async function exportStaplesPdf() {
@@ -199,9 +221,9 @@
 
       doc.setProperties({
         title: "Ohuhu Palette Cards - Staples Card Cut",
-        subject: "8.5 x 11 inch duplex sheets with two exact 4 x 5 inch square-corner cards per side; no bleed or crop marks; 300 ppi RGB; aligned for long-edge duplex printing and Complex Cutting As Cards",
+        subject: "8.5 x 11 inch duplex sheets with two exact 4 x 5 inch square-corner cards per side; no bleed; trim crop marks; 300 ppi RGB; aligned for long-edge duplex printing and Complex Cutting As Cards",
         creator: "Photo Palette Maker",
-        keywords: "Staples, complex cutting, as cards, letter, 4x5, duplex, square palette cards"
+        keywords: "Staples, complex cutting, as cards, letter, 4x5, crop marks, duplex, square palette cards"
       });
 
       let firstPage = true;
@@ -244,11 +266,17 @@
 
     const note = document.querySelector(".pdf-export-note");
     if (note) {
-      note.textContent = "Staples setup: Letter, double-sided colour, flip on long edge, Complex Cutting → As Cards. The PDF has two exact 4 × 5 in square-corner cards per side with a 0.25 in gap, no bleed and no crop marks.";
-      note.style.maxWidth = "660px";
+      note.textContent = "Staples setup: Letter, double-sided colour, flip on long edge, Complex Cutting → As Cards. The PDF has two exact 4 × 5 in square-corner cards per side with a 0.25 in gap, no bleed, and subtle trim crop marks.";
+      note.style.maxWidth = "680px";
       note.style.fontSize = "12px";
       note.style.lineHeight = "1.4";
     }
+
+    const footer = document.querySelector(".app-footer p");
+    if (footer) {
+      footer.textContent = "Cards are fixed at 4 × 5 in with square corners. The Staples PDF uses 8.5 × 11 in Letter pages with two exact-size cards per side, no bleed, subtle trim crop marks, and aligned fronts/backs for double-sided long-edge printing with Complex Cutting → As Cards.";
+    }
+
     refreshIcons();
   }
 
