@@ -82,6 +82,124 @@
   opacity: .55;
 }
 
+.palette-card-double {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-face {
+  min-width: 0;
+  background: #fff;
+}
+
+.palette-card-double[data-face="front"] .card-back,
+.palette-card-double[data-face="back"] .card-front {
+  display: none;
+}
+
+.card-front .photo-wrap {
+  margin: 0;
+  border-radius: 0;
+}
+
+.front-swatch-stack,
+.front-swatch-row {
+  margin: 0;
+  padding: 0;
+}
+
+.front-swatch-row {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0;
+}
+
+.front-swatch {
+  min-width: 0;
+  height: 44px;
+  margin: 0;
+  padding: 0;
+}
+
+.card-front .palette-meta {
+  border-top: 0;
+}
+
+.card-action-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.card-flip {
+  min-height: 44px;
+  gap: 8px;
+  padding-inline: 14px;
+}
+
+.card-flip svg,
+.card-remove svg {
+  width: 18px;
+  height: 18px;
+}
+
+.card-back {
+  min-height: 100%;
+}
+
+.back-palette-grid {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  background: #fff;
+}
+
+.back-swatch-row {
+  display: grid;
+  grid-template-columns: minmax(64px, 22%) minmax(0, 1fr) minmax(82px, 30%);
+  align-items: stretch;
+  gap: 8px;
+  min-height: 68px;
+  margin: 0;
+  padding: 0;
+}
+
+.back-marker-colour,
+.back-original-colour {
+  min-width: 0;
+  min-height: 68px;
+}
+
+.back-marker-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  padding: 8px 0;
+}
+
+.back-marker-copy strong {
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.1;
+}
+
+.back-marker-copy span {
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.back-card-footer {
+  display: flex;
+  justify-content: flex-end;
+  padding: 14px 16px 16px;
+}
+
 @media (max-width: 720px) {
   .credentials-panel {
     padding: 16px;
@@ -104,10 +222,58 @@
     width: 100%;
     min-width: 0;
   }
+
+  .front-swatch {
+    height: 40px;
+  }
+
+  .back-swatch-row {
+    grid-template-columns: minmax(54px, 21%) minmax(0, 1fr) minmax(72px, 29%);
+    min-height: 62px;
+    gap: 7px;
+  }
+
+  .back-marker-colour,
+  .back-original-colour {
+    min-height: 62px;
+  }
 }
 
 @media print {
   .credentials-panel {
     display: none !important;
+  }
+
+  .palette-card-double {
+    display: contents !important;
+    overflow: visible;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .palette-card-double .card-face {
+    display: block !important;
+    overflow: hidden;
+    border: 1px solid #d8d8d8;
+    border-radius: 16px;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .card-controls {
+    display: none !important;
+  }
+
+  .front-swatch {
+    height: 38px;
+  }
+
+  .back-swatch-row {
+    min-height: 58px;
+  }
+
+  .back-marker-colour,
+  .back-original-colour {
+    min-height: 58px;
   }
 }
