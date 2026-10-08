@@ -1,24 +1,18 @@
-# Ohuhu Oahu Palette Lab
+# Photo Palette Maker
 
-A mobile-friendly single-page palette generator built specifically for the current Ohuhu Oahu 100 marker set.
+A photo-first palette generator for the calibrated Ohuhu Oahu 100 marker set.
 
-## Features
+## What it does
 
-- Restricts every palette to the official Oahu 100 set
-- Uses official current marker codes and names
-- Loads matching old Oahu codes/names and digital hex approximations from the MysticSparkleWings Ohuhu data source
-- Palette filters: random, similar, warm, cool, pastel, vivid, moody, neutral
-- Palette sizes from 3 to 8 colours
-- Lock individual colours while regenerating
-- Local image upload and dominant-colour matching to the nearest Oahu marker
-- 20 curated preset palettes inspired by popular Color Hunt and Coolors combinations, automatically matched to the nearest unique Oahu 100 markers
-- Browse/search all 100 markers
-- Print queue with four palette cards per US Letter page
-- Blank hand-swatch area beside each printed colour
-- No page header or title in printed output
+- Automatically sources candidate photos from Openverse and Wikimedia Commons
+- Analyses source images locally in the browser
+- Converts photo samples and marker colours to OKLab for perceptual matching
+- Rejects photos that do not map strongly enough to the available marker gamut
+- Selects six distinct physical marker colours for every accepted photo
+- Rejects near-duplicate six-marker palettes
+- Keeps photo source, creator, and licence metadata attached to every card
+- Saves generated cards locally in the browser
+- Prints photo plus six-swatch cards four per US Letter page
+- Uses the calibrated marker hex values as the displayed swatches
 
-## Notes
-
-The on-screen colour is only a digital approximation. Real alcohol marker swatches vary by paper, ink load, lighting, scanning, and display calibration. The print cards intentionally include a blank swatch box for the actual marker.
-
-The palette filter thresholds are based on the logic used by the MysticSparkleWings Ohuhu Palette Generator. Marker set membership is restricted to the official Ohuhu Oahu 100 chart.
+The previous manual generator and preset palette collection have been removed. The photo is now the source of truth for every palette.
