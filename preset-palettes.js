@@ -5,140 +5,140 @@
       name: "Berry Cream",
       source: "Color Hunt",
       tags: ["soft", "warm"],
-      colours: ["#D45060", "#FFF9F2", "#F3E6D5", "#800020"],
+      colours: ["#FFF9F2", "#F3E6D5", "#E9A7B4", "#D45060", "#A52E45", "#800020"],
     },
     {
       id: "midnight-cream",
       name: "Midnight Cream",
       source: "Color Hunt",
       tags: ["cool", "dark"],
-      colours: ["#FCF1D0", "#22396F", "#0D1C42", "#010736"],
+      colours: ["#FCF1D0", "#E6D8B5", "#6173A7", "#22396F", "#0D1C42", "#010736"],
     },
     {
       id: "soft-garden",
       name: "Soft Garden",
       source: "Color Hunt",
       tags: ["soft", "nature"],
-      colours: ["#8EA66B", "#FFF9D6", "#FFDCDC", "#D8A2A2"],
+      colours: ["#FFF9D6", "#E8E7B5", "#BBC78C", "#8EA66B", "#D8A2A2", "#9E7777"],
     },
     {
       id: "peach-sorbet",
       name: "Peach Sorbet",
       source: "Color Hunt",
       tags: ["soft", "warm"],
-      colours: ["#FFB1B1", "#FFCCB8", "#FFDBB0", "#FFFAD3"],
+      colours: ["#FFFAD3", "#FFDBB0", "#FFCCB8", "#FFB1B1", "#F48F9E", "#D66E83"],
     },
     {
       id: "poolside",
       name: "Poolside",
       source: "Color Hunt",
       tags: ["bold", "cool"],
-      colours: ["#FFD444", "#F4EB6C", "#8ACFF8", "#006199"],
+      colours: ["#FFF2A6", "#F4EB6C", "#FFD444", "#8ACFF8", "#3D9ED6", "#006199"],
     },
     {
       id: "candy-sky",
       name: "Candy Sky",
       source: "Color Hunt",
       tags: ["soft", "cool"],
-      colours: ["#FF95A5", "#FFF6DC", "#76C0EC", "#425B9A"],
+      colours: ["#FFF6DC", "#FFD5DA", "#FF95A5", "#AFCFF0", "#76C0EC", "#425B9A"],
     },
     {
       id: "retro-diner",
       name: "Retro Diner",
       source: "Color Hunt",
       tags: ["bold", "warm"],
-      colours: ["#6C1A1A", "#A82020", "#F8E0A4", "#31AAA9"],
+      colours: ["#F8E0A4", "#E7B866", "#31AAA9", "#167B7A", "#A82020", "#6C1A1A"],
     },
     {
       id: "ember-glow",
       name: "Ember Glow",
       source: "Color Hunt",
       tags: ["bold", "warm"],
-      colours: ["#FCAD38", "#EB7F31", "#E45742", "#972828"],
+      colours: ["#FFD58A", "#FCAD38", "#EB7F31", "#E45742", "#B93B35", "#972828"],
     },
     {
       id: "olive-orchard",
       name: "Olive Orchard",
       source: "Color Hunt",
       tags: ["nature", "warm"],
-      colours: ["#FCECD8", "#597928", "#91AC67", "#6E3511"],
+      colours: ["#FCECD8", "#D8CDA8", "#91AC67", "#597928", "#6E3511", "#3F2618"],
     },
     {
       id: "forest-gold",
       name: "Forest Gold",
       source: "Color Hunt",
       tags: ["nature", "dark"],
-      colours: ["#E8DCC4", "#C49A45", "#2A6B5C", "#123F36"],
+      colours: ["#E8DCC4", "#C49A45", "#7E8B58", "#2A6B5C", "#1E5146", "#123F36"],
     },
     {
       id: "vintage-rose",
       name: "Vintage Rose",
       source: "Color Hunt",
       tags: ["soft", "neutral"],
-      colours: ["#AEC4D4", "#F5EFE1", "#E5D3AF", "#790D16"],
+      colours: ["#F5EFE1", "#E5D3AF", "#AEC4D4", "#A77D7C", "#790D16", "#4D1519"],
     },
     {
       id: "orchid-pop",
       name: "Orchid Pop",
       source: "Color Hunt",
       tags: ["bold", "soft"],
-      colours: ["#FFC0DE", "#ED96D7", "#C654C3", "#8E1EA2"],
+      colours: ["#FFE2EF", "#FFC0DE", "#ED96D7", "#C654C3", "#8E1EA2", "#59136B"],
     },
     {
       id: "blush-clay",
       name: "Blush Clay",
       source: "Coolors",
       tags: ["soft", "warm"],
-      colours: ["#FFE5D9", "#FCD0A1", "#FFA8A9", "#B5838D", "#896A67"],
+      colours: ["#FFF2E9", "#FFE5D9", "#FCD0A1", "#FFA8A9", "#B5838D", "#896A67"],
     },
     {
       id: "sea-glass",
       name: "Sea Glass",
       source: "Coolors",
       tags: ["cool", "bold"],
-      colours: ["#21897E", "#3BA99C", "#69D1C5", "#7EBCE6", "#8980F5"],
+      colours: ["#D9F4F1", "#69D1C5", "#3BA99C", "#21897E", "#7EBCE6", "#8980F5"],
     },
     {
       id: "natural-linen",
       name: "Natural Linen",
       source: "Coolors",
       tags: ["neutral", "nature", "soft"],
-      colours: ["#CB997E", "#EDDCD2", "#FFF1E6", "#F0EFEB", "#DDBEA9", "#A5A58D", "#B7B7A4"],
+      colours: ["#FFF1E6", "#F0EFEB", "#EDDCD2", "#DDBEA9", "#CB997E", "#A5A58D"],
     },
     {
       id: "spring-meadow",
       name: "Spring Meadow",
       source: "Coolors",
       tags: ["nature", "soft"],
-      colours: ["#F1F7EE", "#B0BEA9", "#92AA83", "#E0EDC5", "#E7F59E"],
+      colours: ["#F1F7EE", "#E7F59E", "#E0EDC5", "#B0BEA9", "#92AA83", "#58734F"],
     },
     {
       id: "electric-garden",
       name: "Electric Garden",
       source: "Coolors",
       tags: ["nature", "bold", "dark"],
-      colours: ["#016FB9", "#2A6041", "#7C238C", "#8BBF9F", "#35524A"],
+      colours: ["#C6E955", "#8BBF9F", "#2A6041", "#35524A", "#016FB9", "#7C238C"],
     },
     {
       id: "deep-riviera",
       name: "Deep Riviera",
       source: "Coolors",
       tags: ["cool", "bold", "dark"],
-      colours: ["#0B3C65", "#3AA5A0", "#DDD1C8", "#E71E61", "#920942"],
+      colours: ["#F3EAE4", "#DDD1C8", "#3AA5A0", "#0B3C65", "#E71E61", "#920942"],
     },
     {
       id: "lavender-smoke",
       name: "Lavender Smoke",
       source: "Coolors",
       tags: ["soft", "neutral", "cool"],
-      colours: ["#8F9491", "#BCA3AC", "#E5CEDC", "#F3EAF4", "#EADDE1"],
+      colours: ["#F3EAF4", "#E5CEDC", "#EADDE1", "#BCA3AC", "#8F9491", "#5D6260"],
     },
     {
       id: "teal-stone",
       name: "Teal Stone",
       source: "Coolors",
       tags: ["cool", "dark", "neutral"],
-      colours: ["#000000", "#FFFFFC", "#BEB7A4", "#087E8B", "#2081C3"],
+      colours: ["#FFFFFC", "#DCD7CA", "#BEB7A4", "#087E8B", "#2081C3", "#000000"],
     },
   ];
 
@@ -259,11 +259,9 @@
     state.locks.clear();
     state.palette = matches.map(marker => ({ ...marker }));
 
-    if ([...document.getElementById("sizeSelect").options].some(option => Number(option.value) === matches.length)) {
-      document.getElementById("sizeSelect").value = String(matches.length);
-    }
+    document.getElementById("sizeSelect").value = "6";
 
-    renderPalette(`${preset.name} · ${matches.length} colours`, "Curated preset");
+    renderPalette(`${preset.name} · 6 colours`, "Curated preset");
     const refresh = document.getElementById("refreshButton");
     if (refresh) refresh.disabled = true;
 
