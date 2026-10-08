@@ -169,7 +169,8 @@
     if (!summary) return;
     const { paper } = selectedPaper();
     const layout = bestPaperLayout(paper);
-    summary.textContent = `${layout.capacity} cards/sheet · 3.5 × 5 in · ${layout.orientation}`;
+    const duplexEdge = layout.orientation === "portrait" ? "long edge" : "short edge";
+    summary.textContent = `${layout.capacity} cards/sheet · 3.5 × 5 in · ${layout.orientation} · flip ${duplexEdge}`;
   }
 
   function printStrip(items, key) {
@@ -217,6 +218,10 @@
       </section>`;
   }
 
+  function duplexEdgeFor(layout) {
+    return layout.orientation === "portrait" ? "long edge" : "short edge";
+  }
+
   function preparePrintPages() {
     const palettes = visiblePalettes();
     if (!palettes.length) {
@@ -262,12 +267,13 @@
     }
     pageStyle.textContent = `@page { size: ${layout.width}in ${layout.height}in; margin: 0; }`;
 
-    return true;
+    return layout;
   }
 
   window.print = function printPaletteCards() {
-    if (!preparePrintPages()) return;
-    showToast("For aligned backs: print double-sided, flip on long edge, at 100% / actual size.");
+    const layout = preparePrintPages();
+    if (!layout) return;
+    showToast(`For aligned backs: print double-sided, flip on ${duplexEdgeFor(layout)}, at 100% / actual size.`);
     setTimeout(() => nativePrint(), 120);
   };
 
@@ -279,7 +285,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     injectPrintControls();
     const footer = document.querySelector(".app-footer p");
-    if (footer) footer.textContent = "Cards print at a fixed 3.5 × 5 in size. Choose the paper size, then print double-sided with flip on long edge at 100% / actual size. Fronts and backs are automatically positioned to align.";
+    if (footer) footer.textContent = "Cards print at a fixed 3.5 × 5 in size. Choose the paper size and the app will pick the most efficient page orientation. Use the duplex flip edge shown beside the paper selector and print at 100% / actual size. Fronts and backs are automatically positioned to align.";
     renderPalettes();
   });
 })();
