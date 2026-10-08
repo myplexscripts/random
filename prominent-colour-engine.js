@@ -26,10 +26,28 @@
 
   function clusterSamples(samples, k = 18, iterations = 9) {
     if (samples.length < k) return [];
-    const sorted = [...samples].sort((a, b) => a.L - b.L);
-    const centers = Array.from({ length: k }, (_, i) => ({ ...sorted[Math.min(sorted.length - 1, Math.floor((i + .5) * sorted.length / k))] }));
-    let assignments = new Array(samples.length).fill(0);
 
+    // Farthest-point seeding in OKLab captures small but visually distinct accents
+    // much better than seeding only by lightness.
+    const sorted = [...samples].sort((a, b) => a.L - b.L);
+    const centers = [{ ...sorted[Math.floor(sorted.length / 2)] }];
+    while (centers.length < k) {
+      let bestSample = null;
+      let bestDistance = -1;
+      for (let i = 0; i < samples.length; i += 3) {
+        const sample = samples[i];
+        const nearest = Math.min(...centers.map(center => oklabDistance(sample, center)));
+        if (nearest > bestDistance) {
+          bestDistance = nearest;
+          bestSample = sample;
+        }
+      }
+      if (!bestSample) break;
+      centers.push({ ...bestSample });
+    }
+    if (centers.length < k) return [];
+
+    let assignments = new Array(samples.length).fill(0);
     for (let iteration = 0; iteration < iterations; iteration += 1) {
       const sums = Array.from({ length: k }, () => ({ L: 0, a: 0, b: 0, count: 0 }));
       samples.forEach((sample, index) => {
