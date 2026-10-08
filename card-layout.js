@@ -36,31 +36,30 @@
     return typeof original === "string" ? original : original?.hex || "#FFFFFF";
   }
 
+  function readableText(hex) {
+    const raw = String(hex || "#FFFFFF").replace("#", "");
+    const r = parseInt(raw.slice(0, 2), 16) || 0;
+    const g = parseInt(raw.slice(2, 4), 16) || 0;
+    const b = parseInt(raw.slice(4, 6), 16) || 0;
+    const luminance = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+    return luminance > .57 ? "#171814" : "#FFFFFF";
+  }
+
   function originalStrip(palette, reverse = false, className = "") {
     const colours = palette.originals.map(originalHex);
     if (reverse) colours.reverse();
     return `<div class="front-swatch-row ${className}">${colours.map(hex => `<div class="front-swatch" style="background:${hex}"></div>`).join("")}</div>`;
   }
 
-  function markerStrip(palette, reverse = false, className = "") {
+  function markerStrip(palette, reverse = false, className = "", withLabels = false) {
     const markers = [...palette.markers];
     if (reverse) markers.reverse();
-    return `<div class="front-swatch-row ${className}">${markers.map(marker => `<div class="front-swatch" style="background:${marker.hex}"></div>`).join("")}</div>`;
-  }
-
-  function buildBackRows(palette) {
-    return [...palette.markers].map((marker, index) => ({ marker, original: palette.originals[index] }))
-      .reverse()
-      .map(({ marker, original }) => `
-        <div class="back-swatch-row">
-          <div class="back-marker-colour" style="background:${marker.hex}"></div>
-          <div class="back-marker-copy">
-            <strong>${escapeHtml(marker.code)}</strong>
-            <span>${escapeHtml(marker.name || marker.code)}</span>
-          </div>
-          <div class="back-original-colour" style="background:${originalHex(original)}"></div>
-        </div>`)
-      .join("");
+    return `<div class="front-swatch-row ${className}">${markers.map(marker => {
+      const label = withLabels
+        ? `<span class="back-marker-label" style="color:${readableText(marker.hex)}"><strong>${escapeHtml(marker.code)}</strong><span>${escapeHtml(marker.name || marker.code)}</span></span>`
+        : "";
+      return `<div class="front-swatch back-marker-strip-swatch" style="background:${marker.hex}">${label}</div>`;
+    }).join("")}</div>`;
   }
 
   renderPalettes = function renderCardsWithMirroredBacks() {
@@ -96,9 +95,11 @@
           </div>
         </section>
         <section class="card-face card-back" aria-label="Palette card back">
-          ${originalStrip(palette, true, "back-top-palette")}
-          <div class="back-palette-grid">${buildBackRows(palette)}</div>
-          ${markerStrip(palette, true, "back-bottom-palette")}
+          <div class="back-palette-pair" aria-label="Mirrored sampled and marker palette">
+            ${originalStrip(palette, true, "back-top-palette")}
+            ${markerStrip(palette, true, "back-marker-palette", true)}
+          </div>
+          <div class="back-card-spacer" aria-hidden="true"></div>
           <div class="back-card-footer card-controls">
             <button class="card-flip secondary-button" type="button"><i data-lucide="rotate-ccw"></i><span>Front</span></button>
           </div>
@@ -173,8 +174,14 @@
     summary.textContent = `${layout.capacity} cards/sheet · 3.5 × 5 in · ${layout.orientation} · flip ${duplexEdge}`;
   }
 
-  function printStrip(items, key) {
-    return `<div class="print-strip">${items.map(item => `<div style="background:${item[key] || item}"></div>`).join("")}</div>`;
+  function printStrip(items, key, labels = false) {
+    return `<div class="print-strip ${labels ? "print-marker-strip" : ""}">${items.map(item => {
+      const hex = item[key] || item;
+      const label = labels
+        ? `<span class="print-marker-label" style="color:${readableText(hex)}"><strong>${escapeHtml(item.code)}</strong><span>${escapeHtml(item.name || item.code)}</span></span>`
+        : "";
+      return `<div style="background:${hex}">${label}</div>`;
+    }).join("")}</div>`;
   }
 
   function printFrontCard(palette) {
@@ -194,16 +201,10 @@
     const reversedMarkers = pairs.map(pair => pair.marker);
     return `
       <article class="print-card print-card-back">
-        ${printStrip(reversedOriginals, "hex")}
-        <div class="print-back-list">
-          ${pairs.map(({ marker, original }) => `
-            <div class="print-back-row">
-              <div class="print-back-marker" style="background:${marker.hex}"></div>
-              <div class="print-back-copy"><strong>${escapeHtml(marker.code)}</strong><span>${escapeHtml(marker.name || marker.code)}</span></div>
-              <div class="print-back-original" style="background:${original}"></div>
-            </div>`).join("")}
+        <div class="print-back-palette-pair">
+          ${printStrip(reversedOriginals, "hex")}
+          ${printStrip(reversedMarkers, "hex", true)}
         </div>
-        ${printStrip(reversedMarkers, "hex")}
       </article>`;
   }
 
@@ -285,7 +286,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     injectPrintControls();
     const footer = document.querySelector(".app-footer p");
-    if (footer) footer.textContent = "Cards print at a fixed 3.5 × 5 in size. Choose the paper size and the app will pick the most efficient page orientation. Use the duplex flip edge shown beside the paper selector and print at 100% / actual size. Fronts and backs are automatically positioned to align.";
+    if (footer) footer.textContent = "Cards stay at a fixed 3.5 × 5 in size. Backs mirror the front colour order, with the sampled row and labelled marker row touching along the top. Choose a paper size and print double-sided at 100% / actual size using the flip edge shown beside the selector.";
     renderPalettes();
   });
 })();
