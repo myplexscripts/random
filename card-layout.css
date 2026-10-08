@@ -135,9 +135,10 @@
   gap: 5px;
   width: max-content;
   max-width: 300%;
-  overflow: hidden;
+  overflow: visible;
+  padding-bottom: 3px;
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-  line-height: 1;
+  line-height: 1.25;
   white-space: nowrap;
   text-overflow: ellipsis;
   transform: rotate(90deg);
@@ -147,15 +148,19 @@
 
 .back-marker-label strong {
   flex: 0 0 auto;
+  padding-bottom: 2px;
   font-size: 14px;
   font-weight: 800;
+  line-height: 1.25;
 }
 
 .back-marker-label span {
   min-width: 0;
   overflow: hidden;
+  padding-bottom: 2px;
   font-size: 12px;
   font-weight: 600;
+  line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -320,9 +325,10 @@
     gap: .035in;
     width: max-content;
     max-width: 2in;
-    overflow: hidden;
+    overflow: visible;
+    padding-bottom: .025in;
     font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
-    line-height: 1;
+    line-height: 1.25;
     white-space: nowrap;
     text-overflow: ellipsis;
     transform: rotate(90deg);
@@ -331,15 +337,19 @@
 
   .print-marker-label strong {
     flex: 0 0 auto;
+    padding-bottom: .015in;
     font-size: 8pt;
     font-weight: 800;
+    line-height: 1.25;
   }
 
   .print-marker-label span {
     min-width: 0;
     overflow: hidden;
+    padding-bottom: .015in;
     font-size: 7pt;
     font-weight: 600;
+    line-height: 1.25;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
