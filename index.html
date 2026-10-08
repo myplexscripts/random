@@ -47,7 +47,7 @@
       <div class="generator-copy">
         <p class="eyebrow">Automatic workflow</p>
         <h2 id="generatorTitle">Generate photo palettes</h2>
-        <p>The app balances coverage, accent colours, contrast and colour diversity, then builds a varied collection across pastel, vivid, moody, earthy, warm, cool, neutral and balanced palettes.</p>
+        <p>The app balances coverage, accent colours, contrast and colour diversity, then keeps the collection as even as possible across 11 palette families: pastel, vivid, moody, earthy, warm, cool, neutral, jewel, muted, monochrome and balanced.</p>
       </div>
       <div class="generator-actions">
         <label class="field"><span>Palettes</span><select id="targetCount"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option></select></label>
@@ -81,7 +81,7 @@
       <div class="marker-grid" id="markerGrid"></div>
     </details>
 
-    <footer class="app-footer"><p>Cards are fixed at 4 × 5 in with duplex-aligned backs. Exported PDFs stay RGB so a print shop can convert them using the correct CMYK/PDF-X profile for its press and paper.</p></footer>
+    <footer class="app-footer"><p>Cards are fixed at 4 × 5 in. The print-shop PDF exports paired fronts and backs with 0.125 in bleed, crop marks, 300 ppi artwork and a 3 mm corner-round production note. RGB is intentional so the printer can apply its own CMYK/PDF-X press profile.</p></footer>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
@@ -93,6 +93,8 @@
   <script src="prominent-colour-engine.js"></script>
   <script src="card-layout.js"></script>
   <script src="palette-variety.js"></script>
+  <script src="category-balance.js"></script>
   <script src="pdf-export.js"></script>
+  <script src="print-shop-export.js"></script>
 </body>
 </html>
