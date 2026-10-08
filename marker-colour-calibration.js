@@ -109,6 +109,10 @@
     120: "#171619",
   };
 
+  // Expose a read-only reference so the image-first workflow can guarantee
+  // it always matches against the calibrated swatch colours.
+  window.OAHU_REAL_WORLD_HEX = Object.freeze({ ...REAL_WORLD_HEX_OVERRIDES });
+
   let applied = false;
 
   function applyCalibration() {
@@ -149,5 +153,13 @@
     }, 10);
 
     setTimeout(() => clearInterval(timer), 15000);
+  }
+
+  // Load the image-first workflow without requiring another index.html dependency.
+  if (!document.querySelector('script[data-oahu-image-workflow]')) {
+    const workflowScript = document.createElement("script");
+    workflowScript.src = "image-workflow.js";
+    workflowScript.dataset.oahuImageWorkflow = "true";
+    document.body.appendChild(workflowScript);
   }
 })();
