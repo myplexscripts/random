@@ -7,7 +7,7 @@ const state = {
   attempts: 0, rejected: 0, sourceCursor: 0, usedPhotoIds: new Set()
 };
 const els = {};
-const STORAGE_KEY = "oahu-photo-palettes-v2";
+const STORAGE_KEY = "oahu-photo-palettes-v3";
 const $ = id => document.getElementById(id);
 
 function init() {
@@ -38,12 +38,12 @@ async function generateBatch() {
   const target = Number(els.targetCount.value || 24);
   const startingCount = state.palettes.length;
   const goalCount = startingCount + target;
-  const maxAttempts = Math.max(target * 18, 120);
+  const maxAttempts = Math.max(target * 42, 240);
   state.stopRequested = false;
   state.attempts = 0;
   state.rejected = 0;
   els.progressWrap.hidden = false;
-  setBusy(true, "Generating");
+  setBusy(true, "Searching Unsplash");
 
   try {
     while (!state.stopRequested && state.palettes.length < goalCount && state.attempts < maxAttempts) {
@@ -60,14 +60,14 @@ async function generateBatch() {
       }
 
       shuffle(photos);
-      for (const photo of photos.slice(0, 8)) {
+      for (const photo of photos.slice(0, 14)) {
         if (state.stopRequested || state.palettes.length >= goalCount || state.attempts >= maxAttempts) break;
         if (state.usedPhotoIds.has(String(photo.id))) continue;
         state.attempts += 1;
         updateProgress(startingCount, goalCount, subject);
         try {
           const analysis = await analysePhoto(photo);
-          if (!analysis || analysis.score < 68 || analysis.markers.length !== 6) {
+          if (!analysis || analysis.score < 85 || analysis.markers.length !== 6 || analysis.originals.length !== 6) {
             state.rejected += 1;
             continue;
           }
@@ -81,7 +81,9 @@ async function generateBatch() {
             creator: photo.creator || "Unknown creator",
             licence: photo.licence || "See source",
             score: Math.round(analysis.score),
-            markers: analysis.markers.map(marker => ({ code: marker.code, hex: marker.hex })),
+            markers: analysis.markers.map(marker => ({ code: marker.code, name: marker.name || marker.code, hex: marker.hex })),
+            originals: analysis.originals.map(hex => ({ hex })),
+            complexity: analysis.complexity || null,
             createdAt: Date.now()
           };
           if (isDuplicatePalette(candidate)) {
@@ -115,56 +117,12 @@ function nextSubject() {
   return PHOTO_SUBJECTS[state.sourceCursor++ % PHOTO_SUBJECTS.length];
 }
 
-async function sourcePhotos(subject) {
-  const [openverse, commons] = await Promise.all([
-    fetchOpenverse(subject).catch(() => []),
-    fetchCommons(subject).catch(() => [])
-  ]);
-  return [...openverse, ...commons];
-}
-
-async function fetchOpenverse(subject) {
-  const url = `https://api.openverse.org/v1/images/?q=${encodeURIComponent(subject)}&page_size=20&extension=jpg`;
-  const response = await fetch(url, { headers: { Accept: "application/json" } });
-  if (!response.ok) throw new Error(`Openverse ${response.status}`);
-  const data = await response.json();
-  return (data.results || [])
-    .filter(item => item.thumbnail && Number(item.width) >= 900 && Number(item.height) >= 650)
-    .map(item => ({
-      id: item.id,
-      image: item.thumbnail,
-      sourceUrl: item.foreign_landing_url || item.detail_url || item.url,
-      source: "Openverse",
-      creator: stripHtml(item.creator || "Unknown creator"),
-      licence: [item.license, item.license_version].filter(Boolean).join(" ").toUpperCase()
-    }));
-}
-
-async function fetchCommons(subject) {
-  const query = encodeURIComponent(`${subject} photograph`);
-  const url = `https://commons.wikimedia.org/w/api.php?action=query&generator=search&gsrsearch=${query}&gsrnamespace=6&gsrlimit=20&prop=imageinfo&iiprop=url%7Csize%7Cmime%7Cextmetadata&iiurlwidth=1200&format=json&origin=*`;
-  const response = await fetch(url);
-  if (!response.ok) throw new Error(`Commons ${response.status}`);
-  const data = await response.json();
-  return Object.values(data.query?.pages || {}).flatMap(page => {
-    const info = page.imageinfo?.[0];
-    if (!info || info.mime !== "image/jpeg" || info.width < 900 || info.height < 650 || !info.thumburl) return [];
-    const meta = info.extmetadata || {};
-    return [{
-      id: String(page.pageid),
-      image: info.thumburl,
-      sourceUrl: info.descriptionurl || `https://commons.wikimedia.org/?curid=${page.pageid}`,
-      source: "Wikimedia Commons",
-      creator: stripHtml(meta.Artist?.value || "Unknown creator"),
-      licence: stripHtml(meta.LicenseShortName?.value || "See source")
-    }];
-  });
-}
+async function sourcePhotos() { return []; }
 
 async function analysePhoto(photo) {
   const image = await loadCorsImage(photo.image);
   const samples = sampleImage(image, 88);
-  if (samples.length < 300) return null;
+  if (samples.length < 300 || !state.markers.length) return null;
   const clusters = kMeans(samples, 14, 8);
   const mapped = mapClustersToMarkers(clusters);
   if (mapped.length < 6) return null;
@@ -181,7 +139,7 @@ async function analysePhoto(photo) {
   const closeness = clamp(100 * (1 - averageDistance / .145), 0, 100);
   const coverage = closeCoverage * 100;
   const distinctness = paletteDistinctness(markers) * 100;
-  return { score: closeness * .58 + coverage * .27 + distinctness * .15, markers };
+  return { score: closeness * .58 + coverage * .27 + distinctness * .15, markers, originals: [] };
 }
 
 function sampleImage(image, size) {
@@ -299,19 +257,6 @@ function renderPalettes() {
   els.emptyState.hidden = state.palettes.length > 0;
   els.printButton.disabled = els.clearButton.disabled = state.palettes.length === 0;
   els.libraryCopy.textContent = state.palettes.length ? `${state.palettes.length} automatically generated palette${state.palettes.length === 1 ? "" : "s"}.` : "No generated palettes yet.";
-
-  state.palettes.forEach(palette => {
-    const article = document.createElement("article");
-    article.className = "palette-card";
-    article.innerHTML = `
-      <div class="photo-wrap"><img src="${escapeAttr(palette.image)}" alt="Source photo for ${escapeAttr(palette.subject)}" loading="lazy" referrerpolicy="no-referrer"><span class="score-badge">${palette.score}% match</span></div>
-      <div class="swatch-row">${palette.markers.map(marker => `<div class="swatch" style="background:${marker.hex};--label-colour:${contrastText(marker.hex)}"><span title="${marker.code} ${marker.hex}">${marker.code}</span></div>`).join("")}</div>
-      <div class="palette-meta"><strong>${escapeHtml(titleCase(palette.subject))}</strong><span>${escapeHtml(palette.licence || palette.source)}</span></div>
-      <div class="card-footer"><a class="source-link" href="${escapeAttr(palette.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(`${palette.source} · ${palette.creator}`)}</a><button class="card-remove" type="button" aria-label="Remove palette"><i data-lucide="x"></i></button></div>`;
-    article.querySelector(".card-remove").addEventListener("click", () => removePalette(palette.id));
-    els.paletteGrid.appendChild(article);
-  });
-  refreshIcons();
 }
 
 function renderMarkerBrowser() {
@@ -346,7 +291,7 @@ function restorePalettes() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
     if (!Array.isArray(saved)) return;
-    state.palettes = saved.filter(item => item?.image && Array.isArray(item.markers) && item.markers.length === 6);
+    state.palettes = saved.filter(item => item?.image && Array.isArray(item.markers) && item.markers.length === 6 && Array.isArray(item.originals) && item.originals.length === 6);
     state.palettes.forEach(item => state.usedPhotoIds.add(String(item.photoId || item.id)));
   } catch (error) { console.warn("Could not restore palettes", error); }
 }
@@ -386,11 +331,6 @@ function contrastText(hex) {
   const value = hex.replace("#", "");
   const r = parseInt(value.slice(0,2),16), g = parseInt(value.slice(2,4),16), b = parseInt(value.slice(4,6),16);
   return ((.2126*r + .7152*g + .0722*b) / 255) > .6 ? "#151612" : "#ffffff";
-}
-function stripHtml(value) {
-  const div = document.createElement("div");
-  div.innerHTML = String(value || "");
-  return (div.textContent || "").replace(/\s+/g, " ").trim().slice(0, 90);
 }
 function escapeHtml(value) { return String(value ?? "").replace(/[&<>"']/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[char])); }
 function escapeAttr(value) { return escapeHtml(value); }
