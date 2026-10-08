@@ -43,13 +43,13 @@
       <div class="generator-copy">
         <p class="eyebrow">Automatic workflow</p>
         <h2 id="generatorTitle">Generate photo palettes</h2>
-        <p>The app now chooses the six source colours first, then finds a unique nearby marker for each one. Images that cannot be represented cleanly with six colours are skipped automatically.</p>
+        <p>The app chooses six source colours first, checks that the image can still be represented cleanly with six colours, then matches each source colour to a nearby unique marker. The match percentage measures the colour pairing itself.</p>
       </div>
       <div class="generator-actions">
         <label class="field"><span>Palettes</span><select id="targetCount"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option></select></label>
         <label class="field match-field" for="matchThreshold">
-          <span class="match-field-heading"><span>Minimum match</span><output id="matchThresholdValue" for="matchThreshold">85%</output></span>
-          <input id="matchThreshold" type="range" min="85" max="100" step="1" value="85" aria-label="Minimum palette match percentage">
+          <span class="match-field-heading"><span>Minimum marker match</span><output id="matchThresholdValue" for="matchThreshold">85%</output></span>
+          <input id="matchThreshold" type="range" min="85" max="100" step="1" value="85" aria-label="Minimum marker match percentage">
         </label>
         <button class="primary-button" id="generateButton" type="button"><i data-lucide="sparkles"></i><span>Generate palettes</span></button>
         <button class="secondary-button" id="stopButton" type="button" hidden><i data-lucide="square"></i>Stop</button>
