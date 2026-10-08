@@ -1,7 +1,46 @@
 (() => {
   const KEY_STORAGE = "oahu-unsplash-access-key";
+  const THRESHOLD_STORAGE = "oahu-match-threshold";
   const MIN_MATCH_SCORE = 85;
+  const MAX_MATCH_SCORE = 100;
   const originalAnalysePhoto = analysePhoto;
+  const originalRenderPalettes = renderPalettes;
+  const originalSetBusy = setBusy;
+
+  const ORIGINAL_PALETTE_SEARCHES = [
+    "Berry Cream", "Midnight Cream", "Soft Garden", "Peach Sorbet", "Poolside", "Candy Sky",
+    "Retro Diner", "Ember Glow", "Olive Orchard", "Forest Gold", "Vintage Rose", "Orchid Pop",
+    "Blush Clay", "Sea Glass", "Natural Linen", "Spring Meadow", "Electric Garden", "Deep Riviera",
+    "Lavender Smoke", "Teal Stone", "Cozy Bedroom", "Pet Shop", "Holiday Boutique", "Coffee Shop",
+    "Yard Sale", "Spa Bath", "Ice Cream Truck", "Farmers Market", "Sewing Room", "Juice Bar",
+    "Flower Stall", "Home Office", "Nursery", "Bakery", "Cat Fish Shop", "Art Desk", "Beauty Vanity",
+    "Gym", "Home Kitchen", "Workshop", "Laundry Room", "Thank You Desk", "Ramen Night", "Autumn Magic",
+    "Pizza Kitchen", "Lovely Bakery", "Sleepy Bedroom", "Farm Garden", "Sushi Bar", "Bubble Tea",
+    "Halloween Toy Shop", "Cozy Closet", "Christmas Fireplace"
+  ];
+
+  if (Array.isArray(PHOTO_SUBJECTS)) {
+    const existing = new Set(PHOTO_SUBJECTS.map(item => item.toLowerCase()));
+    ORIGINAL_PALETTE_SEARCHES.forEach(name => {
+      if (!existing.has(name.toLowerCase())) PHOTO_SUBJECTS.push(name);
+    });
+  }
+
+  function getMatchThreshold() {
+    const slider = document.getElementById("matchThreshold");
+    const stored = Number(localStorage.getItem(THRESHOLD_STORAGE));
+    const raw = slider ? Number(slider.value) : stored;
+    const value = Number.isFinite(raw) ? raw : MIN_MATCH_SCORE;
+    return Math.max(MIN_MATCH_SCORE, Math.min(MAX_MATCH_SCORE, Math.round(value)));
+  }
+
+  function updateThresholdUi() {
+    const slider = document.getElementById("matchThreshold");
+    const output = document.getElementById("matchThresholdValue");
+    const threshold = getMatchThreshold();
+    if (slider && Number(slider.value) !== threshold) slider.value = String(threshold);
+    if (output) output.textContent = `${threshold}%`;
+  }
 
   async function fetchUnsplashPhotos(subject, accessKey) {
     const params = new URLSearchParams({
@@ -43,10 +82,30 @@
     return fetchUnsplashPhotos(subject, accessKey);
   };
 
-  analysePhoto = async function analysePhotoWithMinimumScore(photo) {
+  analysePhoto = async function analysePhotoWithThreshold(photo) {
     const analysis = await originalAnalysePhoto(photo);
-    if (!analysis || analysis.score < MIN_MATCH_SCORE) return null;
+    if (!analysis || analysis.score < getMatchThreshold()) return null;
     return analysis;
+  };
+
+  renderPalettes = function renderPalettesAtThreshold() {
+    if (!Array.isArray(state.palettes)) return originalRenderPalettes();
+    const allPalettes = state.palettes;
+    const threshold = getMatchThreshold();
+    state.palettes = allPalettes.filter(palette =>
+      palette?.source === "Unsplash" && Number(palette.score) >= threshold
+    );
+    try {
+      originalRenderPalettes();
+    } finally {
+      state.palettes = allPalettes;
+    }
+  };
+
+  setBusy = function setBusyWithThresholdLock(busy, text = "Ready") {
+    originalSetBusy(busy, text);
+    const slider = document.getElementById("matchThreshold");
+    if (slider) slider.disabled = busy;
   };
 
   async function validateKey(key) {
@@ -59,7 +118,7 @@
     return response.ok;
   }
 
-  function pruneLibrary() {
+  function pruneLegacyLibrary() {
     if (!Array.isArray(state.palettes)) return;
 
     const filtered = state.palettes.filter(palette =>
@@ -71,10 +130,7 @@
     state.usedPhotoIds.clear();
     state.palettes.forEach(palette => state.usedPhotoIds.add(String(palette.photoId || palette.id)));
 
-    if (changed) {
-      if (typeof persistPalettes === "function") persistPalettes();
-      if (typeof renderPalettes === "function") renderPalettes();
-    }
+    if (changed && typeof persistPalettes === "function") persistPalettes();
   }
 
   function updateUi() {
@@ -82,14 +138,16 @@
     const status = document.getElementById("unsplashStatus");
     const generate = document.getElementById("generateButton");
     const savedKey = (localStorage.getItem(KEY_STORAGE) || "").trim();
+    const threshold = getMatchThreshold();
 
     if (input && document.activeElement !== input) input.value = savedKey;
     if (status) {
       status.textContent = savedKey
-        ? `Unsplash connected. Only results scoring ${MIN_MATCH_SCORE}% or higher will be kept.`
+        ? `Unsplash connected. Only results scoring ${threshold}% or higher will be shown and kept in new batches.`
         : "No Unsplash key saved. Add one before generating palettes.";
     }
     if (generate && !state.running) generate.disabled = !savedKey;
+    updateThresholdUi();
   }
 
   async function saveKey() {
@@ -135,9 +193,15 @@
     const input = document.getElementById("unsplashKey");
     const save = document.getElementById("saveUnsplashKey");
     const clear = document.getElementById("clearUnsplashKey");
+    const slider = document.getElementById("matchThreshold");
 
     const savedKey = localStorage.getItem(KEY_STORAGE) || "";
+    const savedThreshold = Number(localStorage.getItem(THRESHOLD_STORAGE));
     if (input) input.value = savedKey;
+    if (slider && Number.isFinite(savedThreshold) && savedThreshold >= MIN_MATCH_SCORE && savedThreshold <= MAX_MATCH_SCORE) {
+      slider.value = String(Math.round(savedThreshold));
+    }
+
     save?.addEventListener("click", saveKey);
     clear?.addEventListener("click", clearKey);
     input?.addEventListener("keydown", event => {
@@ -146,9 +210,20 @@
         saveKey();
       }
     });
+    slider?.addEventListener("input", () => {
+      updateThresholdUi();
+      updateUi();
+      renderPalettes();
+    });
+    slider?.addEventListener("change", () => {
+      localStorage.setItem(THRESHOLD_STORAGE, String(getMatchThreshold()));
+      updateUi();
+      renderPalettes();
+    });
 
-    pruneLibrary();
+    pruneLegacyLibrary();
     updateUi();
+    renderPalettes();
     if (window.lucide) window.lucide.createIcons();
   });
 })();
