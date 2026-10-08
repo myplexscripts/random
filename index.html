@@ -15,7 +15,7 @@
       <div>
         <p class="eyebrow">Ohuhu Oahu 100</p>
         <h1>Photo Palette Maker</h1>
-        <p class="subtitle">Automatically finds photos, rejects poor marker matches, and builds six-colour palettes using only your calibrated marker set.</p>
+        <p class="subtitle">Automatically finds beautiful Unsplash photos and keeps only palettes that match your calibrated marker set by at least 85%.</p>
       </div>
       <div class="status-pill" id="sourceStatus" aria-live="polite"><span class="status-dot"></span><span>Ready</span></div>
     </header>
@@ -24,7 +24,7 @@
       <div class="credentials-copy">
         <p class="eyebrow">Photo source</p>
         <h2 id="credentialsTitle">Unsplash</h2>
-        <p>Enter your Unsplash access key once. It stays in this browser and is used to source higher-quality photography for new palettes.</p>
+        <p>Enter your Unsplash access key once. It stays in this browser. Unsplash is the only photo source used for new palettes.</p>
       </div>
       <div class="credentials-form">
         <label class="field credentials-field" for="unsplashKey">
@@ -43,7 +43,7 @@
       <div class="generator-copy">
         <p class="eyebrow">Automatic workflow</p>
         <h2 id="generatorTitle">Generate photo palettes</h2>
-        <p>One click sources photos, analyses their colours, maps them to your markers, rejects weak results, and keeps only distinct six-marker palettes.</p>
+        <p>One click searches Unsplash, analyses each photo, maps its colours to your markers, rejects anything below 85%, and keeps only distinct six-marker palettes.</p>
       </div>
       <div class="generator-actions">
         <label class="field"><span>Palettes</span><select id="targetCount"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option></select></label>
@@ -64,7 +64,7 @@
           <button class="secondary-button danger-button" id="clearButton" type="button" disabled><i data-lucide="trash-2"></i>Clear</button>
         </div>
       </div>
-      <div class="empty-state surface" id="emptyState"><i data-lucide="image"></i><strong>Generate your first batch</strong><span>The app will source and filter the photos for you.</span></div>
+      <div class="empty-state surface" id="emptyState"><i data-lucide="image"></i><strong>Generate your first batch</strong><span>The app will search and filter Unsplash for you.</span></div>
       <div class="palette-grid" id="paletteGrid" aria-live="polite"></div>
     </section>
 
@@ -73,7 +73,7 @@
       <div class="marker-grid" id="markerGrid"></div>
     </details>
 
-    <footer class="app-footer"><p>When an Unsplash access key is saved, new palettes use Unsplash photography exclusively.</p></footer>
+    <footer class="app-footer"><p>Unsplash is the only photo source. Results below 85% marker compatibility are rejected automatically.</p></footer>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
