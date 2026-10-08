@@ -48,7 +48,7 @@
       <div class="generator-copy">
         <p class="eyebrow">Automatic workflow</p>
         <h2 id="generatorTitle">Generate photo palettes</h2>
-        <p>The app balances coverage, accent colours, contrast and colour diversity, then keeps the collection as even as possible across 11 palette families: pastel, vivid, moody, earthy, warm, cool, neutral, jewel, muted, monochrome and balanced.</p>
+        <p>The app balances coverage, accent colours, contrast and colour diversity, rejects palettes that are too similar to anything already saved, then keeps the collection as even as possible across 11 palette families: pastel, vivid, moody, earthy, warm, cool, neutral, jewel, muted, monochrome and balanced.</p>
       </div>
       <div class="generator-actions">
         <label class="field"><span>Palettes</span><select id="targetCount"><option value="12">12</option><option value="24" selected>24</option><option value="48">48</option><option value="96">96</option></select></label>
@@ -82,7 +82,7 @@
       <div class="marker-grid" id="markerGrid"></div>
     </details>
 
-    <footer class="app-footer"><p>Cards are fixed at 4 × 5 in with square corners. The Staples PDF uses 8.5 × 11 in Letter pages with two exact-size cards per side, a 0.25 in gap, no bleed and no crop marks, aligned for double-sided long-edge printing and Complex Cutting → As Cards.</p></footer>
+    <footer class="app-footer"><p>Cards are fixed at 4 × 5 in with square corners. The Staples PDF uses 8.5 × 11 in Letter pages with two exact-size cards per side, subtle trim crop marks, and aligned fronts/backs for double-sided long-edge printing with Complex Cutting → As Cards.</p></footer>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
@@ -95,6 +95,7 @@
   <script src="card-layout.js"></script>
   <script src="palette-variety.js"></script>
   <script src="category-balance.js"></script>
+  <script src="duplicate-guard.js"></script>
   <script src="pdf-export.js"></script>
   <script src="print-shop-export.js"></script>
 </body>
