@@ -7,6 +7,7 @@
   <meta name="description" content="Automatically turn source photos into six-colour Ohuhu Oahu marker palettes.">
   <title>Photo Palette Maker</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="unsplash.css">
 </head>
 <body>
   <main class="app-shell">
@@ -18,6 +19,25 @@
       </div>
       <div class="status-pill" id="sourceStatus" aria-live="polite"><span class="status-dot"></span><span>Ready</span></div>
     </header>
+
+    <section class="credentials-panel surface" aria-labelledby="credentialsTitle">
+      <div class="credentials-copy">
+        <p class="eyebrow">Photo source</p>
+        <h2 id="credentialsTitle">Unsplash</h2>
+        <p>Enter your Unsplash access key once. It stays in this browser and is used to source higher-quality photography for new palettes.</p>
+      </div>
+      <div class="credentials-form">
+        <label class="field credentials-field" for="unsplashKey">
+          <span>Unsplash access key</span>
+          <input id="unsplashKey" type="password" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste access key">
+        </label>
+        <div class="credentials-actions">
+          <button class="primary-button" id="saveUnsplashKey" type="button"><i data-lucide="key-round"></i>Save key</button>
+          <button class="secondary-button" id="clearUnsplashKey" type="button"><i data-lucide="eraser"></i>Clear</button>
+        </div>
+      </div>
+      <p class="credentials-status" id="unsplashStatus">No Unsplash key saved. Add one before generating palettes.</p>
+    </section>
 
     <section class="generator-panel surface" aria-labelledby="generatorTitle">
       <div class="generator-copy">
@@ -53,11 +73,12 @@
       <div class="marker-grid" id="markerGrid"></div>
     </details>
 
-    <footer class="app-footer"><p>Photo sources are queried automatically from open image services. Source and licence details remain attached to each card.</p></footer>
+    <footer class="app-footer"><p>When an Unsplash access key is saved, new palettes use Unsplash photography exclusively.</p></footer>
   </main>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"></script>
   <script src="marker-colour-calibration.js"></script>
   <script src="app.js"></script>
+  <script src="unsplash.js"></script>
 </body>
 </html>
