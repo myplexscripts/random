@@ -4,6 +4,10 @@
     pastel: "Pastel", vivid: "Vivid", moody: "Moody", earthy: "Earthy", warm: "Warm", cool: "Cool",
     neutral: "Neutral", jewel: "Jewel", muted: "Muted", monochrome: "Monochrome", balanced: "Balanced"
   };
+  const PROFILE = {
+    pastel: .10, vivid: .10, moody: .08, earthy: .10, warm: .10, cool: .10,
+    neutral: .08, jewel: .08, muted: .08, monochrome: .08, balanced: .10
+  };
   const SEARCHES = {
     pastel: ["pastel still life", "soft pastel interior", "blush flowers", "pastel dessert", "spring flowers pastel", "soft ceramics"],
     vivid: ["colourful market", "bright fruit still life", "vivid flowers", "colourful food", "painted houses", "colourful pottery"],
@@ -71,11 +75,19 @@
     return counts;
   }
 
-  function equalTargets(total, counts) {
-    const base = Math.floor(total / CATEGORIES.length), remainder = total % CATEGORIES.length;
-    const targets = Object.fromEntries(CATEGORIES.map(c => [c, base]));
-    [...CATEGORIES].sort((a, b) => counts[a] - counts[b] || CATEGORIES.indexOf(a) - CATEGORIES.indexOf(b)).slice(0, remainder)
-      .forEach(c => targets[c] += 1);
+  function profileTargets(total, counts) {
+    const targets = {};
+    const fractions = [];
+    let assigned = 0;
+    CATEGORIES.forEach(category => {
+      const exact = total * PROFILE[category];
+      const base = Math.floor(exact);
+      targets[category] = base;
+      assigned += base;
+      fractions.push({ category, fraction: exact - base, current: counts[category] || 0 });
+    });
+    fractions.sort((a, b) => b.fraction - a.fraction || a.current - b.current || CATEGORIES.indexOf(a.category) - CATEGORIES.indexOf(b.category));
+    for (let i = 0; assigned < total; i += 1, assigned += 1) targets[fractions[i % fractions.length].category] += 1;
     return targets;
   }
 
@@ -108,8 +120,8 @@
   function canAccept(category, counts, targets, made, target, attempts, maxAttempts) {
     if (counts[category] < targets[category]) return true;
     if (!CATEGORIES.some(c => counts[c] < targets[c])) return true;
-    const ceiling = Math.ceil((state.palettes.length + Math.max(0, target - made)) / CATEGORIES.length) + 1;
-    if (counts[category] >= Math.max(targets[category], ceiling)) return false;
+    const hardCap = Math.max(...Object.values(targets)) + 1;
+    if (counts[category] >= hardCap) return false;
     return attempts / maxAttempts >= .84 || made / target >= .88;
   }
 
@@ -128,14 +140,16 @@
     box.hidden = state.palettes.length === 0;
   }
 
-  generateBatch = async function generateEvenlyBalancedBatch() {
+  window.updatePaletteCategorySummary = summary;
+
+  generateBatch = async function generateColourCubeBalancedBatch() {
     if (state.running || state.markers.length !== 100) return;
     if (!(localStorage.getItem(KEY_STORAGE) || "").trim()) { showToast("Add your Unsplash access key first."); return; }
 
     const target = Number(els.targetCount.value || 24);
     const starting = state.palettes.length;
     const counts = countsFor();
-    const targets = equalTargets(starting + target, counts);
+    const targets = profileTargets(starting + target, counts);
     const maxSearches = Math.min(42, Math.max(16, Math.ceil(target * .58)));
     const maxAttempts = maxSearches * 30;
     let searches = 0;
@@ -144,7 +158,7 @@
     state.attempts = 0;
     state.rejected = 0;
     els.progressWrap.hidden = false;
-    setBusy(true, "Building an evenly varied collection");
+    setBusy(true, "Building a balanced 11-family collection");
 
     try {
       while (!state.stopRequested && state.palettes.length - starting < target && state.attempts < maxAttempts && searches < maxSearches) {
@@ -185,7 +199,6 @@
             counts[candidate.category] += 1;
             persistPalettes();
             renderPalettes();
-            summary();
           } catch (error) {
             console.warn("Photo analysis failed", error);
             state.rejected += 1;
@@ -195,7 +208,7 @@
       const made = state.palettes.length - starting;
       if (state.stopRequested) showToast(`Stopped after ${made} palette${made === 1 ? "" : "s"}.`);
       else if (made < target) showToast(`Created ${made} balanced palettes before the quality/API limit was reached.`);
-      else showToast(`Created ${made} evenly balanced photo palettes.`);
+      else showToast(`Created ${made} balanced photo palettes.`);
     } finally {
       const made = state.palettes.length - starting;
       els.progressBar.style.width = `${clamp(made / target * 100, 0, 100)}%`;
@@ -207,10 +220,16 @@
     }
   };
 
+  const priorRenderPalettes = renderPalettes;
+  renderPalettes = function renderPalettesWithElevenFamilySummary() {
+    priorRenderPalettes();
+    setTimeout(summary, 0);
+  };
+
   document.addEventListener("DOMContentLoaded", () => {
     let changed = false;
     state.palettes.forEach(p => { const c = classify(p); if (p.category !== c) { p.category = c; changed = true; } });
     if (changed) persistPalettes();
-    summary();
+    setTimeout(summary, 20);
   });
 })();
