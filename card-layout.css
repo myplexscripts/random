@@ -35,14 +35,30 @@
   line-height: 1.3;
 }
 
+/* The outer card owns the size. Neither face is allowed to change it. */
 .palette-card-double {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
   aspect-ratio: 3.5 / 5;
+  overflow: hidden;
 }
 
 .palette-card-double .card-face {
+  position: absolute;
+  inset: 0;
   width: 100%;
   height: 100%;
+  min-width: 0;
   min-height: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.palette-card-double[data-face="front"] .card-back,
+.palette-card-double[data-face="back"] .card-front {
+  display: none;
 }
 
 .card-front {
@@ -66,7 +82,6 @@
 .card-back {
   display: flex;
   flex-direction: column;
-  min-height: 0;
 }
 
 .back-palette-pair {
@@ -90,34 +105,38 @@
   overflow: hidden;
 }
 
+/* Marker text starts at the seam and is physically rotated 90 degrees. */
 .back-marker-label {
   position: absolute;
-  top: 6px;
-  left: 50%;
+  top: 5px;
+  left: calc(50% + 7px);
   display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  max-height: calc(100% - 10px);
-  writing-mode: vertical-rl;
-  transform: translateX(-50%) rotate(180deg);
-  transform-origin: center;
+  align-items: baseline;
+  gap: 4px;
+  max-width: 78px;
+  overflow: hidden;
   white-space: nowrap;
   line-height: 1;
+  text-overflow: ellipsis;
+  transform: rotate(90deg);
+  transform-origin: left top;
   text-shadow: 0 1px 2px rgba(0, 0, 0, .12);
   pointer-events: none;
 }
 
 .back-marker-label strong {
+  flex: 0 0 auto;
   font-size: 14px;
   font-weight: 850;
 }
 
 .back-marker-label span {
-  max-height: 70px;
+  min-width: 0;
   overflow: hidden;
   font-size: 12px;
   font-weight: 700;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .back-card-spacer {
@@ -155,7 +174,9 @@
 
   .back-marker-label {
     top: 5px;
-    gap: 4px;
+    left: calc(50% + 6px);
+    gap: 3px;
+    max-width: 70px;
   }
 
   .back-marker-label strong {
@@ -163,7 +184,6 @@
   }
 
   .back-marker-label span {
-    max-height: 63px;
     font-size: 11px;
   }
 }
@@ -300,29 +320,32 @@
 
   .print-marker-label {
     position: absolute;
-    top: .035in;
-    left: 50%;
+    top: .025in;
+    left: calc(50% + .045in);
     display: inline-flex;
-    align-items: center;
-    gap: .03in;
-    max-height: .51in;
-    writing-mode: vertical-rl;
-    transform: translateX(-50%) rotate(180deg);
-    transform-origin: center;
+    align-items: baseline;
+    gap: .025in;
+    max-width: .50in;
+    overflow: hidden;
     white-space: nowrap;
     line-height: 1;
+    text-overflow: ellipsis;
+    transform: rotate(90deg);
+    transform-origin: left top;
   }
 
   .print-marker-label strong {
+    flex: 0 0 auto;
     font-size: 6.8pt;
     font-weight: 850;
   }
 
   .print-marker-label span {
-    max-height: .38in;
+    min-width: 0;
     overflow: hidden;
     font-size: 5.8pt;
     font-weight: 700;
     text-overflow: ellipsis;
+    white-space: nowrap;
   }
 }
