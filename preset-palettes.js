@@ -20,12 +20,8 @@
     { id: "deep-riviera", name: "Deep Riviera", source: "Coolors", tags: ["cool", "bold", "dark"], colours: ["#F3EAE4", "#DDD1C8", "#3AA5A0", "#0B3C65", "#E71E61", "#920942"] },
     { id: "lavender-smoke", name: "Lavender Smoke", source: "Coolors", tags: ["soft", "neutral", "cool"], colours: ["#F3EAF4", "#E5CEDC", "#EADDE1", "#BCA3AC", "#8F9491", "#5D6260"] },
     { id: "teal-stone", name: "Teal Stone", source: "Coolors", tags: ["cool", "dark", "neutral"], colours: ["#FFFFFC", "#DCD7CA", "#BEB7A4", "#087E8B", "#2081C3", "#000000"] },
-
-    { id: "lc-pizza-oven", name: "Pizza Oven", source: "Book p. 5", tags: ["little-corner", "warm"], colours: ["#F5E6D3", "#F2B84B", "#C94C3F", "#A85F46", "#5D7A4A", "#3B3230"] },
     { id: "lc-cozy-bedroom", name: "Cozy Bedroom", source: "Book p. 6", tags: ["little-corner", "soft"], colours: ["#F3E7D2", "#E9B7B8", "#C9848C", "#B8A7CF", "#9CAE8B", "#8B6B5C"] },
     { id: "lc-pet-shop", name: "Pet Shop", source: "Book p. 7", tags: ["little-corner", "bold"], colours: ["#F1E4C7", "#8FCFD1", "#E69A8D", "#E0B64E", "#8A5C45", "#4F6B56"] },
-    { id: "lc-kitchen-corner", name: "Kitchen Corner", source: "Book p. 8", tags: ["little-corner", "warm", "nature"], colours: ["#F1E5CD", "#A8C5A2", "#E8A17F", "#E6C75B", "#B9664E", "#6F554A"] },
-    { id: "lc-bookshop", name: "Bookshop", source: "Book p. 9", tags: ["little-corner", "neutral"], colours: ["#E9DCC4", "#D2A84F", "#8196A8", "#5E7154", "#8B3F4C", "#6C5145"] },
     { id: "lc-holiday-boutique", name: "Holiday Boutique", source: "Book p. 10", tags: ["little-corner", "dark"], colours: ["#F5E6C9", "#D4B05A", "#A9C4D6", "#355B4A", "#A23D4A", "#76534A"] },
     { id: "lc-coffee-shop", name: "Coffee Shop", source: "Book p. 11", tags: ["little-corner", "warm", "neutral"], colours: ["#EAD9BF", "#B9875C", "#B56A56", "#73866B", "#6D4C3D", "#3B302B"] },
     { id: "lc-yard-sale", name: "Yard Sale", source: "Book p. 12", tags: ["little-corner", "bold"], colours: ["#EFE0C5", "#D5B454", "#D98974", "#5E9B96", "#6C83A2", "#7B5A46"] },
@@ -37,14 +33,12 @@
     { id: "lc-flower-stall", name: "Flower Stall", source: "Book p. 18", tags: ["little-corner", "nature", "soft"], colours: ["#EEE0C4", "#D8B74F", "#D98FA0", "#A58BB7", "#91AFC2", "#79936E"] },
     { id: "lc-home-office", name: "Home Office", source: "Book p. 19", tags: ["little-corner", "neutral"], colours: ["#E8DDCA", "#B66F59", "#82917B", "#758A9B", "#8A8179", "#51443D"] },
     { id: "lc-nursery", name: "Nursery", source: "Book p. 20", tags: ["little-corner", "soft"], colours: ["#EFE4CF", "#E4C86A", "#E1AEB7", "#A8C7D6", "#B6A3C6", "#A9C7AE"] },
-    { id: "lc-bear-cafe", name: "Bear Cafe", source: "Book p. 21", tags: ["little-corner", "warm", "neutral"], colours: ["#E7D7BA", "#B98A63", "#C47A77", "#829375", "#795844", "#4B392F"] },
     { id: "lc-bakery", name: "Bakery", source: "Book p. 22", tags: ["little-corner", "warm"], colours: ["#EFE2C3", "#D9B654", "#C99761", "#B55659", "#8B9B77", "#6B4A3F"] },
     { id: "lc-cat-shop", name: "Cat Fish Shop", source: "Book p. 23", tags: ["little-corner", "cool"], colours: ["#E7DCC7", "#C4A254", "#CE796A", "#6F9EB0", "#5D7660", "#4B4B49"] },
     { id: "lc-art-desk", name: "Art Desk", source: "Book p. 24", tags: ["little-corner", "bold"], colours: ["#E9DDC7", "#D7A25C", "#D2796F", "#7E9C75", "#6F8EA4", "#66506D"] },
     { id: "lc-beauty-vanity", name: "Beauty Vanity", source: "Book p. 25", tags: ["little-corner", "soft", "warm"], colours: ["#E8D8C9", "#DCA483", "#D79AAF", "#A57F92", "#8A5977", "#6D554F"] },
     { id: "lc-gym", name: "Gym", source: "Book p. 26", tags: ["little-corner", "bold", "cool"], colours: ["#E6DDC8", "#C2A24E", "#6F9EA0", "#4F6480", "#B44D57", "#8A8986"] },
     { id: "lc-home-kitchen", name: "Home Kitchen", source: "Book p. 27", tags: ["little-corner", "warm", "neutral"], colours: ["#E8D9C3", "#D3B56B", "#B97758", "#849173", "#728698", "#5A4B42"] },
-    { id: "lc-bathroom", name: "Bathroom", source: "Book p. 28", tags: ["little-corner", "soft", "cool"], colours: ["#ECE1D1", "#A9C3BA", "#8DAEB0", "#B98F8B", "#858F7A", "#6A6B70"] },
     { id: "lc-workshop", name: "Workshop", source: "Book p. 29", tags: ["little-corner", "neutral"], colours: ["#DCCEB4", "#A47A57", "#C47B4D", "#6F7E63", "#61788E", "#4D4842"] },
     { id: "lc-laundry-room", name: "Laundry Room", source: "Book p. 30", tags: ["little-corner", "cool"], colours: ["#E2D8C4", "#C9776E", "#7DA8A7", "#9A8FA8", "#78856E", "#556577"] },
     { id: "lc-thank-you-desk", name: "Thank You Desk", source: "Book p. 31", tags: ["little-corner", "soft"], colours: ["#E8DDCA", "#D7A49B", "#B990A7", "#8EA4A0", "#8492A7", "#62546A"] },
@@ -55,12 +49,10 @@
     { id: "lc-sleepy-bedroom", name: "Sleepy Bedroom", source: "Book p. 36", tags: ["little-corner", "soft", "cool"], colours: ["#EDE1CF", "#D5A8B2", "#B7A5C3", "#8EA1AE", "#8E987D", "#665A62"] },
     { id: "lc-farm-garden", name: "Farm Garden", source: "Book p. 37", tags: ["little-corner", "nature"], colours: ["#E5D9B8", "#D3B64E", "#D17B42", "#97A657", "#5F7C4F", "#7A5A43"] },
     { id: "lc-sushi-bar", name: "Sushi Bar", source: "Book p. 38", tags: ["little-corner", "cool", "warm"], colours: ["#E6DCC5", "#D5A47E", "#D88572", "#A64E5B", "#435C4B", "#5B4439"] },
-    { id: "lc-coffee-nook", name: "Coffee Nook", source: "Book p. 39", tags: ["little-corner", "warm", "neutral"], colours: ["#E8D8BE", "#C7A06C", "#A76D55", "#7F8B71", "#6D5142", "#44352F"] },
     { id: "lc-bubble-tea", name: "Bubble Tea", source: "Book p. 40", tags: ["little-corner", "bold", "soft"], colours: ["#E8D7BD", "#D8AB4E", "#D8838D", "#9A7FA5", "#7E9A63", "#5B463E"] },
     { id: "lc-toy-shop", name: "Halloween Toy Shop", source: "Book p. 41", tags: ["little-corner", "bold", "dark"], colours: ["#E7D7B6", "#D27D39", "#8E9F53", "#7C5B8D", "#B54C4A", "#4A4548"] },
     { id: "lc-closet", name: "Cozy Closet", source: "Book p. 42", tags: ["little-corner", "soft", "neutral"], colours: ["#E8DDC8", "#D7A2AA", "#B28A60", "#71859C", "#7E8C74", "#765768"] },
     { id: "lc-christmas-fireplace", name: "Christmas Fireplace", source: "Book p. 43", tags: ["little-corner", "warm", "dark"], colours: ["#E7D8BE", "#C4A04E", "#A5454F", "#3F654B", "#7A5744", "#4D5364"] },
-    { id: "lc-reading-nook", name: "Reading Nook", source: "Book p. 44", tags: ["little-corner", "warm", "neutral"], colours: ["#E4D7BF", "#C1A555", "#B86E4F", "#7C885F", "#748999", "#5E473E"] },
   ];
 
   const grid = document.getElementById("presetGrid");
@@ -80,7 +72,7 @@
 
   const note = document.querySelector(".preset-note");
   if (note) {
-    note.innerHTML = 'General presets are inspired by popular combinations from <a href="https://colorhunt.co/palettes/popular" target="_blank" rel="noreferrer">Color Hunt</a> and <a href="https://coolors.co/" target="_blank" rel="noreferrer">Coolors</a>. The Little Corner collection adds six-colour combinations designed specifically for the scenes in the book. Every preset is matched to the closest unique markers in your Oahu 100 set.';
+    note.innerHTML = 'General presets are inspired by popular combinations from <a href="https://colorhunt.co/palettes/popular" target="_blank" rel="noreferrer">Color Hunt</a> and <a href="https://coolors.co/" target="_blank" rel="noreferrer">Coolors</a>. The Little Corner collection contains distinct six-colour combinations designed for scenes in the book. Near-duplicate combinations have been removed. Every preset is matched to the closest unique markers in your Oahu 100 set.';
   }
 
   let activeFilter = "all";
