@@ -35,21 +35,99 @@
   line-height: 1.3;
 }
 
-.card-back > .front-swatch-row {
-  flex: 0 0 auto;
+.palette-card-double {
+  aspect-ratio: 3.5 / 5;
 }
 
-.back-palette-grid {
+.palette-card-double .card-face {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+}
+
+.card-front {
+  display: flex;
+  flex-direction: column;
+}
+
+.card-front .photo-wrap {
+  min-height: 0;
   flex: 1 1 auto;
+  aspect-ratio: auto;
+}
+
+.card-front .original-swatch-row,
+.card-front .matched-swatch-row,
+.card-front .palette-meta,
+.card-front .card-footer {
+  flex: 0 0 auto;
 }
 
 .card-back {
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+
+.back-palette-pair {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 0;
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0;
+}
+
+.card-back .front-swatch-row {
+  margin: 0;
+  padding: 0;
+  gap: 0;
 }
 
 .card-back .front-swatch {
+  position: relative;
   height: 88px;
+  overflow: hidden;
+}
+
+.back-marker-label {
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-height: calc(100% - 10px);
+  writing-mode: vertical-rl;
+  transform: translateX(-50%) rotate(180deg);
+  transform-origin: center;
+  white-space: nowrap;
+  line-height: 1;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, .12);
+  pointer-events: none;
+}
+
+.back-marker-label strong {
+  font-size: 14px;
+  font-weight: 850;
+}
+
+.back-marker-label span {
+  max-height: 70px;
+  overflow: hidden;
+  font-size: 12px;
+  font-weight: 700;
+  text-overflow: ellipsis;
+}
+
+.back-card-spacer {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.back-card-footer {
+  flex: 0 0 auto;
+  margin-top: auto;
 }
 
 #printRoot {
@@ -73,6 +151,20 @@
 
   .card-back .front-swatch {
     height: 80px;
+  }
+
+  .back-marker-label {
+    top: 5px;
+    gap: 4px;
+  }
+
+  .back-marker-label strong {
+    font-size: 13px;
+  }
+
+  .back-marker-label span {
+    max-height: 63px;
+    font-size: 11px;
   }
 }
 
@@ -119,14 +211,13 @@
     gap: .16in;
   }
 
-  .print-slot {
+  .print-slot,
+  .print-card {
     width: 3.5in;
     height: 5in;
   }
 
   .print-card {
-    width: 3.5in;
-    height: 5in;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -142,11 +233,13 @@
     display: grid;
     grid-template-columns: repeat(6, 1fr);
     flex: 0 0 .58in;
+    gap: 0;
   }
 
-  .print-strip > div,
-  .print-back-marker,
-  .print-back-original {
+  .print-strip > div {
+    position: relative;
+    min-width: 0;
+    overflow: hidden;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -189,41 +282,47 @@
     font-size: 8pt;
   }
 
-  .print-back-list {
-    min-height: 0;
-    display: grid;
-    grid-template-rows: repeat(6, 1fr);
-    flex: 1 1 auto;
-    gap: .055in;
-    padding: .055in 0;
-  }
-
-  .print-back-row {
-    min-height: 0;
-    display: grid;
-    grid-template-columns: .62in minmax(0, 1fr) .62in;
-    gap: .06in;
-    align-items: stretch;
-  }
-
-  .print-back-copy {
-    min-width: 0;
+  .print-card-back {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    line-height: 1.05;
   }
 
-  .print-back-copy strong {
-    font-size: 9pt;
+  .print-back-palette-pair {
+    display: grid;
+    grid-template-rows: .58in .58in;
+    gap: 0;
+    flex: 0 0 1.16in;
   }
 
-  .print-back-copy span {
-    margin-top: .02in;
-    overflow: hidden;
-    color: #666;
-    font-size: 7.5pt;
-    text-overflow: ellipsis;
+  .print-marker-strip > div {
+    position: relative;
+  }
+
+  .print-marker-label {
+    position: absolute;
+    top: .035in;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: .03in;
+    max-height: .51in;
+    writing-mode: vertical-rl;
+    transform: translateX(-50%) rotate(180deg);
+    transform-origin: center;
     white-space: nowrap;
+    line-height: 1;
+  }
+
+  .print-marker-label strong {
+    font-size: 6.8pt;
+    font-weight: 850;
+  }
+
+  .print-marker-label span {
+    max-height: .38in;
+    overflow: hidden;
+    font-size: 5.8pt;
+    font-weight: 700;
+    text-overflow: ellipsis;
   }
 }
