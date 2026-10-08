@@ -42,6 +42,12 @@
   min-height: 0;
   aspect-ratio: 4 / 5;
   overflow: hidden;
+  cursor: pointer;
+}
+
+.palette-card-double:focus-visible {
+  outline: 3px solid rgba(25, 26, 23, .22);
+  outline-offset: 3px;
 }
 
 .palette-card-double .card-face {
@@ -60,22 +66,40 @@
 }
 
 .card-front {
-  display: flex;
-  flex-direction: column;
-  background: #fff;
-}
-
-.card-front .photo-wrap {
-  min-height: 0;
-  flex: 1 1 auto;
-  aspect-ratio: auto;
+  display: grid;
+  grid-template-rows: 1fr 3fr 1fr;
+  background: transparent;
 }
 
 .card-front .original-swatch-row,
-.card-front .matched-swatch-row,
-.card-front .palette-meta,
-.card-front .card-footer {
-  flex: 0 0 auto;
+.card-front .matched-swatch-row {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+
+.card-front .front-swatch {
+  height: 100%;
+  min-height: 0;
+}
+
+.card-front .photo-wrap {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  border-radius: 0;
+  overflow: hidden;
+}
+
+.card-front .photo-wrap img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
 }
 
 .card-back {
@@ -83,12 +107,6 @@
   grid-template-rows: 1fr 1fr;
   padding: 0;
   background: transparent;
-  cursor: pointer;
-}
-
-.card-back:focus-visible {
-  outline: 3px solid rgba(25, 26, 23, .22);
-  outline-offset: -3px;
 }
 
 .back-half {
@@ -227,8 +245,6 @@
   }
 
   .print-card {
-    display: flex;
-    flex-direction: column;
     overflow: hidden;
     border: .012in solid #bdbdbd;
     border-radius: .12in;
@@ -238,17 +254,23 @@
     print-color-adjust: exact;
   }
 
+  .print-card-front {
+    display: grid;
+    grid-template-rows: 1fr 3fr 1fr;
+  }
+
   .print-strip {
-    height: .62in;
     display: grid;
     grid-template-columns: repeat(6, 1fr);
-    flex: 0 0 .62in;
+    min-height: 0;
+    height: 100%;
     gap: 0;
   }
 
   .print-strip > div {
     position: relative;
     min-width: 0;
+    min-height: 0;
     overflow: hidden;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
@@ -256,7 +278,6 @@
 
   .print-photo {
     min-height: 0;
-    flex: 1 1 auto;
     overflow: hidden;
   }
 
@@ -265,31 +286,6 @@
     height: 100%;
     display: block;
     object-fit: cover;
-  }
-
-  .print-card-caption {
-    height: .38in;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: .08in;
-    flex: 0 0 .38in;
-    padding: 0 .10in;
-    border-top: .008in solid #ddd;
-    font-size: 8.5pt;
-  }
-
-  .print-card-caption strong {
-    min-width: 0;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .print-card-caption span {
-    flex: 0 0 auto;
-    color: #666;
-    font-size: 8pt;
   }
 
   .print-card-back {
