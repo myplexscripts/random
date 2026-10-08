@@ -17,6 +17,63 @@
     pastel: "Pastel", vivid: "Vivid", moody: "Moody", earthy: "Earthy", warm: "Warm", cool: "Cool",
     neutral: "Neutral", jewel: "Jewel", muted: "Muted", monochrome: "Monochrome", balanced: "Balanced"
   };
+  const CATEGORY_BACKS = {
+    pastel: {
+      background: "#E9DDE8",
+      foreground: "#352F34",
+      blurb: "Soft colour can still carry a lot of character. Let these palettes slow things down, leave room to breathe, and make subtle shifts matter."
+    },
+    vivid: {
+      background: "#D65343",
+      foreground: "#FFFFFF",
+      blurb: "Turn the volume up. These palettes are built for bold contrasts, clear focal points, and colour that refuses to sit quietly."
+    },
+    moody: {
+      background: "#34323C",
+      foreground: "#FFFFFF",
+      blurb: "Lean into shadow, atmosphere, and restraint. Moody palettes work best when every colour earns its place."
+    },
+    earthy: {
+      background: "#77664F",
+      foreground: "#FFFFFF",
+      blurb: "Grounded, warm, and easy to live with. These palettes borrow from soil, stone, wood, leaves, and colours that already know how to work together."
+    },
+    warm: {
+      background: "#C86D3E",
+      foreground: "#FFFFFF",
+      blurb: "Use warmth to pull things closer. These palettes are made for glow, comfort, energy, and that last bit of light before evening."
+    },
+    cool: {
+      background: "#55738C",
+      foreground: "#FFFFFF",
+      blurb: "Clean, calm, and spacious. Cool palettes are great for creating distance, clarity, and a quieter kind of contrast."
+    },
+    neutral: {
+      background: "#B8B1A5",
+      foreground: "#25231F",
+      blurb: "Neutrals are not empty space. They are where texture, value, and the smallest colour shifts get to do the heavy lifting."
+    },
+    jewel: {
+      background: "#59436F",
+      foreground: "#FFFFFF",
+      blurb: "Rich colour, deep contrast, and a little drama. Jewel tones are at their best when they feel deliberate rather than decorative."
+    },
+    muted: {
+      background: "#8A817D",
+      foreground: "#FFFFFF",
+      blurb: "Dial the saturation back and the relationships forward. Muted palettes make small differences feel more important."
+    },
+    monochrome: {
+      background: "#4F6874",
+      foreground: "#FFFFFF",
+      blurb: "One colour family, plenty of range. Let value, temperature, and saturation create the movement instead of hue changes."
+    },
+    balanced: {
+      background: "#70745F",
+      foreground: "#FFFFFF",
+      blurb: "Nothing has to dominate. Balanced palettes give you room to move between quiet and bold without losing cohesion."
+    }
+  };
 
   function threshold() {
     return Math.max(85, Math.min(100, Number(document.getElementById("matchThreshold")?.value || 85)));
@@ -145,20 +202,19 @@
 
   function drawNumberBadge(ctx, number, photoTop) {
     const radius = 47;
-    const cx = 62;
-    const cy = photoTop + 62;
+    const edgeGap = 30;
+    const cx = radius + edgeGap;
+    const cy = photoTop + radius + edgeGap;
+    const digits = String(number).length;
+    const fontSize = digits <= 2 ? 34 : digits === 3 ? 29 : 25;
 
     ctx.save();
-    ctx.shadowColor = "rgba(0,0,0,.22)";
-    ctx.shadowBlur = 14;
-    ctx.shadowOffsetY = 4;
     ctx.beginPath();
     ctx.arc(cx, cy, radius, 0, Math.PI * 2);
     ctx.fillStyle = "#FFFFFF";
     ctx.fill();
-    ctx.shadowColor = "transparent";
     ctx.fillStyle = "#171814";
-    ctx.font = "800 34px Inter, Arial, sans-serif";
+    ctx.font = `800 ${fontSize}px Inter, Arial, sans-serif`;
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(String(number), cx, cy + 1);
@@ -262,6 +318,23 @@
     return canvas;
   }
 
+  function wrapText(ctx, text, maxWidth) {
+    const words = String(text).split(/\s+/).filter(Boolean);
+    const lines = [];
+    let line = "";
+    words.forEach(word => {
+      const candidate = line ? `${line} ${word}` : word;
+      if (line && ctx.measureText(candidate).width > maxWidth) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    });
+    if (line) lines.push(line);
+    return lines;
+  }
+
   async function renderTitleCanvas(titleItem) {
     if (document.fonts?.load) {
       await Promise.allSettled([
@@ -300,7 +373,7 @@
 
     const miniCanvases = [];
     for (const card of titleItem.cards) {
-      miniCanvases.push(await renderFrontCanvas(card.palette, card.collectionNumber, true));
+      miniCanvases.push(await renderFrontCanvas(card.palette, card.collectionNumber, false));
     }
 
     const count = miniCanvases.length;
@@ -340,6 +413,44 @@
     return canvas;
   }
 
+  async function renderTitleBackCanvas(titleItem) {
+    if (document.fonts?.load) {
+      await Promise.allSettled([
+        document.fonts.load("800 76px Inter"),
+        document.fonts.load("600 34px Inter")
+      ]);
+    }
+
+    const canvas = document.createElement("canvas");
+    canvas.width = CARD_W * DPI;
+    canvas.height = CARD_H * DPI;
+    const ctx = canvas.getContext("2d");
+    const width = canvas.width;
+    const height = canvas.height;
+    const style = CATEGORY_BACKS[titleItem.category] || CATEGORY_BACKS.balanced;
+
+    ctx.fillStyle = style.background;
+    ctx.fillRect(0, 0, width, height);
+
+    ctx.fillStyle = style.foreground;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "alphabetic";
+    ctx.font = "800 76px Inter, Arial, sans-serif";
+    ctx.fillText(titleItem.label, width / 2, 430);
+
+    ctx.font = "600 34px Inter, Arial, sans-serif";
+    const maxWidth = width - 210;
+    const lines = wrapText(ctx, style.blurb, maxWidth);
+    const lineHeight = 53;
+    const totalHeight = Math.max(0, lines.length - 1) * lineHeight;
+    const startY = 690 - totalHeight / 2;
+    lines.forEach((line, index) => {
+      ctx.fillText(line, width / 2, startY + index * lineHeight);
+    });
+
+    return canvas;
+  }
+
   function addSheet(doc, firstPage) {
     if (!firstPage) doc.addPage([PAGE_W, PAGE_H], "portrait");
     doc.setFillColor(255, 255, 255);
@@ -364,7 +475,9 @@
   }
 
   async function canvasForDeckItem(item, face) {
-    if (item.type === "title") return renderTitleCanvas(item);
+    if (item.type === "title") {
+      return face === "front" ? renderTitleCanvas(item) : renderTitleBackCanvas(item);
+    }
     return face === "front"
       ? renderFrontCanvas(item.palette, item.collectionNumber, true)
       : renderBackCanvas(item.palette);
@@ -409,7 +522,7 @@
 
       doc.setProperties({
         title: "Ohuhu Palette Cards - Staples Card Cut",
-        subject: "8.5 x 11 inch duplex sheets with two exact 4 x 5 inch square-corner cards per side; category divider cards; numbered palette fronts; no bleed; trim crop marks; 300 ppi RGB; aligned for long-edge duplex printing and Complex Cutting As Cards",
+        subject: "8.5 x 11 inch duplex sheets with two exact 4 x 5 inch square-corner cards per side; category divider cards with solid inspirational backs; numbered palette fronts; no bleed; trim crop marks; 300 ppi RGB; aligned for long-edge duplex printing and Complex Cutting As Cards",
         creator: "Photo Palette Maker",
         keywords: "Staples, complex cutting, as cards, letter, 4x5, category cards, numbered, crop marks, duplex, square palette cards"
       });
@@ -454,7 +567,7 @@
 
     const note = document.querySelector(".pdf-export-note");
     if (note) {
-      note.textContent = "Staples setup: Letter, double-sided colour, flip on long edge, Complex Cutting → As Cards. Export groups palettes by family, inserts a category title card before each family, numbers every palette on the image, and includes subtle 4 × 5 in trim crop marks.";
+      note.textContent = "Staples setup: Letter, double-sided colour, flip on long edge, Complex Cutting → As Cards. Export groups palettes by family, inserts a category title card with a solid category blurb on its back, numbers every palette on the image, and includes subtle 4 × 5 in trim crop marks.";
       note.style.maxWidth = "720px";
       note.style.fontSize = "12px";
       note.style.lineHeight = "1.4";
@@ -462,7 +575,7 @@
 
     const footer = document.querySelector(".app-footer p");
     if (footer) {
-      footer.textContent = "Cards are fixed at 4 × 5 in with square corners. The Staples PDF groups the deck by palette family, adds category divider cards with miniature palette fronts, numbers every palette card, includes subtle trim crop marks, and aligns fronts/backs for double-sided long-edge printing with Complex Cutting → As Cards.";
+      footer.textContent = "Cards are fixed at 4 × 5 in with square corners. The Staples PDF groups the deck by palette family, adds category divider cards with miniature unnumbered palette fronts and solid category blurbs on the backs, numbers every palette card, includes subtle trim crop marks, and aligns fronts/backs for double-sided long-edge printing with Complex Cutting → As Cards.";
     }
 
     refreshIcons();
