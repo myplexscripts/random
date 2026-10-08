@@ -87,44 +87,34 @@
       const article = document.createElement("article");
       article.className = "palette-card palette-card-double";
       article.dataset.face = "front";
+      article.setAttribute("role", "button");
+      article.setAttribute("tabindex", "0");
+      article.setAttribute("aria-label", "Palette card. Activate to flip between front and back.");
       article.innerHTML = `
         <section class="card-face card-front" aria-label="Palette card front">
           ${originalStrip(palette, false, "original-swatch-row")}
           <div class="photo-wrap">
-            <img src="${escapeAttr(palette.image)}" alt="Source photo for ${escapeAttr(palette.subject)}" loading="lazy" referrerpolicy="no-referrer">
-            <span class="score-badge">${palette.score}% match</span>
+            <img src="${escapeAttr(palette.image)}" alt="" loading="lazy" referrerpolicy="no-referrer">
           </div>
           ${markerStrip(palette, false, "matched-swatch-row")}
-          <div class="palette-meta"><strong>${escapeHtml(titleCase(palette.subject))}</strong><span>${escapeHtml(palette.licence || palette.source)}</span></div>
-          <div class="card-footer card-controls">
-            <a class="source-link" href="${escapeAttr(palette.sourceUrl)}" target="_blank" rel="noreferrer">${escapeHtml(`${palette.source} · ${palette.creator}`)}</a>
-            <div class="card-action-group">
-              <button class="card-flip secondary-button" type="button"><i data-lucide="rotate-cw"></i><span>Back</span></button>
-              <button class="card-remove" type="button" aria-label="Remove palette"><i data-lucide="x"></i></button>
-            </div>
-          </div>
         </section>
-        <section class="card-face card-back" aria-label="Palette card back. Tap to show front." role="button" tabindex="0">
+        <section class="card-face card-back" aria-label="Palette card back">
           ${backOriginalHalf(palette)}
           ${backMarkerHalf(palette)}
         </section>`;
 
-      article.querySelector(".card-flip")?.addEventListener("click", () => {
-        article.dataset.face = "back";
-      });
+      const toggleFace = () => {
+        article.dataset.face = article.dataset.face === "front" ? "back" : "front";
+      };
 
-      const backFace = article.querySelector(".card-back");
-      backFace?.addEventListener("click", () => {
-        article.dataset.face = "front";
-      });
-      backFace?.addEventListener("keydown", event => {
+      article.addEventListener("click", toggleFace);
+      article.addEventListener("keydown", event => {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
-          article.dataset.face = "front";
+          toggleFace();
         }
       });
 
-      article.querySelector(".card-remove")?.addEventListener("click", () => removePalette(palette.id));
       els.paletteGrid.appendChild(article);
     });
 
@@ -199,7 +189,6 @@
         ${printStrip(originals, "hex")}
         <div class="print-photo"><img src="${escapeAttr(palette.image)}" alt=""></div>
         ${printStrip(palette.markers, "hex")}
-        <div class="print-card-caption"><strong>${escapeHtml(titleCase(palette.subject))}</strong><span>${palette.score}%</span></div>
       </article>`;
   }
 
@@ -297,7 +286,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     injectPrintControls();
     const footer = document.querySelector(".app-footer p");
-    if (footer) footer.textContent = "Cards are fixed at 4 × 5 in. The back is entirely colour: sampled colours fill the top half and mirrored marker colours fill the bottom half, with vertical Inter labels beginning at the centre seam. Print double-sided at 100% / actual size using the flip edge shown beside the paper selector.";
+    if (footer) footer.textContent = "Cards are fixed at 4 × 5 in. Fronts are entirely filled by the sampled palette, source photo, and marker palette. Tap a card to flip it. Backs remain full-colour with mirrored marker order for duplex alignment.";
     renderPalettes();
   });
 })();
