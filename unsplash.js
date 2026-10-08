@@ -1,6 +1,7 @@
 (() => {
   const KEY_STORAGE = "oahu-unsplash-access-key";
-  const originalSourcePhotos = sourcePhotos;
+  const MIN_MATCH_SCORE = 85;
+  const originalAnalysePhoto = analysePhoto;
 
   async function fetchUnsplashPhotos(subject, accessKey) {
     const params = new URLSearchParams({
@@ -39,13 +40,13 @@
   sourcePhotos = async function sourcePhotosFromUnsplash(subject) {
     const accessKey = (localStorage.getItem(KEY_STORAGE) || "").trim();
     if (!accessKey) return [];
+    return fetchUnsplashPhotos(subject, accessKey);
+  };
 
-    try {
-      return await fetchUnsplashPhotos(subject, accessKey);
-    } catch (error) {
-      console.warn("Unsplash sourcing failed", error);
-      throw error;
-    }
+  analysePhoto = async function analysePhotoWithMinimumScore(photo) {
+    const analysis = await originalAnalysePhoto(photo);
+    if (!analysis || analysis.score < MIN_MATCH_SCORE) return null;
+    return analysis;
   };
 
   async function validateKey(key) {
@@ -58,6 +59,24 @@
     return response.ok;
   }
 
+  function pruneLibrary() {
+    if (!Array.isArray(state.palettes)) return;
+
+    const filtered = state.palettes.filter(palette =>
+      palette?.source === "Unsplash" && Number(palette.score) >= MIN_MATCH_SCORE
+    );
+
+    const changed = filtered.length !== state.palettes.length;
+    state.palettes = filtered;
+    state.usedPhotoIds.clear();
+    state.palettes.forEach(palette => state.usedPhotoIds.add(String(palette.photoId || palette.id)));
+
+    if (changed) {
+      if (typeof persistPalettes === "function") persistPalettes();
+      if (typeof renderPalettes === "function") renderPalettes();
+    }
+  }
+
   function updateUi() {
     const input = document.getElementById("unsplashKey");
     const status = document.getElementById("unsplashStatus");
@@ -67,7 +86,7 @@
     if (input && document.activeElement !== input) input.value = savedKey;
     if (status) {
       status.textContent = savedKey
-        ? "Unsplash connected. New palettes will use Unsplash photography only."
+        ? `Unsplash connected. Only results scoring ${MIN_MATCH_SCORE}% or higher will be kept.`
         : "No Unsplash key saved. Add one before generating palettes.";
     }
     if (generate && !state.running) generate.disabled = !savedKey;
@@ -128,6 +147,7 @@
       }
     });
 
+    pruneLibrary();
     updateUi();
     if (window.lucide) window.lucide.createIcons();
   });
