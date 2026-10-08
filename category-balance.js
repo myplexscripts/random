@@ -42,26 +42,62 @@
   function classify(palette) {
     const labs = labsFor(palette);
     if (labs.length !== 6) return "balanced";
+
     const cs = labs.map(chroma);
-    const avgL = labs.reduce((s, v) => s + v.L, 0) / 6;
-    const avgC = cs.reduce((s, v) => s + v, 0) / 6;
+    const ls = labs.map(lab => lab.L);
+    const sortedL = [...ls].sort((a, b) => a - b);
+    const sortedC = [...cs].sort((a, b) => a - b);
+    const avgL = ls.reduce((sum, value) => sum + value, 0) / 6;
+    const avgC = cs.reduce((sum, value) => sum + value, 0) / 6;
+    const medianL = (sortedL[2] + sortedL[3]) / 2;
+    const trimmedL = sortedL.slice(1, 5).reduce((sum, value) => sum + value, 0) / 4;
+    const trimmedC = sortedC.slice(1, 5).reduce((sum, value) => sum + value, 0) / 4;
     const maxC = Math.max(...cs);
+
     const dark = labs.filter(v => v.L < .48).length;
+    const low = labs.filter(v => v.L < .58).length;
+    const light = labs.filter(v => v.L >= .68).length;
+    const veryLight = labs.filter(v => v.L >= .76).length;
+    const pastelFriendly = labs.filter(v => v.L >= .64 && chroma(v) <= .115).length;
+    const vivid = labs.filter(v => chroma(v) >= .095).length;
+    const neutralish = labs.filter(v => chroma(v) <= .038).length;
     const warm = labs.filter(v => { const h = hue(v); return h <= 110 || h >= 315; }).length;
     const cool = labs.filter(v => { const h = hue(v); return h > 110 && h < 315; }).length;
-    const earthy = labs.filter(v => { const h = hue(v), c = chroma(v); return h >= 25 && h <= 155 && c >= .018 && c <= .095 && v.L >= .32 && v.L <= .84; }).length;
+    const earthy = labs.filter(v => {
+      const h = hue(v), c = chroma(v);
+      return h >= 25 && h <= 155 && c >= .018 && c <= .095 && v.L >= .32 && v.L <= .84;
+    }).length;
     const jewel = labs.filter(v => v.L >= .28 && v.L <= .70 && chroma(v) >= .072).length;
 
-    if (avgC <= .026 && maxC <= .060) return "neutral";
-    if (avgL >= .73 && avgC <= .075 && maxC <= .140) return "pastel";
-    if (jewel >= 3 && avgL <= .66 && avgC >= .060) return "jewel";
-    if (avgC >= .090 || maxC >= .160) return "vivid";
-    if (avgL <= .51 || dark >= 3) return "moody";
-    if (earthy >= 3 && avgC <= .095) return "earthy";
-    if (avgC >= .028 && avgC <= .060 && avgL >= .44 && avgL <= .79) return "muted";
+    // A single black, white, or vivid accent should not decide the whole family.
+    // These rules lean on the middle four colours and majority counts so the label
+    // reads more like a person would describe the overall palette.
+    if ((neutralish >= 5 && avgC <= .034) || (avgC <= .026 && maxC <= .060)) return "neutral";
+
+    if (
+      (pastelFriendly >= 4 && medianL >= .66 && trimmedC <= .090 && vivid <= 2)
+      || (light >= 4 && trimmedL >= .70 && avgC <= .095 && maxC <= .150)
+    ) return "pastel";
+
+    if (jewel >= 3 && medianL <= .64 && avgC >= .060 && veryLight <= 2) return "jewel";
+
+    if ((vivid >= 3 && avgC >= .072) || (avgC >= .098 && vivid >= 2)) return "vivid";
+
+    if (
+      (dark >= 4 && medianL <= .50)
+      || (low >= 5 && trimmedL <= .53)
+      || (dark >= 3 && low >= 5 && veryLight === 0)
+    ) return "moody";
+
+    if (earthy >= 4 && avgC <= .095 && vivid <= 2) return "earthy";
+
+    if (avgC >= .028 && avgC <= .062 && trimmedL >= .44 && trimmedL <= .80 && vivid <= 1) return "muted";
+
     if (hueSpan(labs) <= 58) return "monochrome";
-    if (warm >= 4) return "warm";
-    if (cool >= 4) return "cool";
+
+    if (warm >= 4 && pastelFriendly < 4 && medianL < .80) return "warm";
+    if (cool >= 4 && pastelFriendly < 4 && medianL < .80) return "cool";
+
     return "balanced";
   }
 
