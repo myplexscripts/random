@@ -1,0 +1,7 @@
+.palette-card,
+.palette-card-double,
+.palette-card-double .card-face,
+.card-front .photo-wrap,
+.print-card {
+  border-radius: 0 !important;
+}
