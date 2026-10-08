@@ -1,9 +1,9 @@
 (() => {
   const PRINT_PAPER_STORAGE = "oahu-print-paper-size";
-  const CARD_W = 3.5;
+  const CARD_W = 4;
   const CARD_H = 5;
-  const PAGE_MARGIN = .25;
-  const CARD_GAP = .16;
+  const PAGE_MARGIN = .125;
+  const CARD_GAP = .125;
 
   const PAPERS = {
     letter: { label: "Letter (8.5 × 11 in)", width: 8.5, height: 11 },
@@ -51,15 +51,25 @@
     return `<div class="front-swatch-row ${className}">${colours.map(hex => `<div class="front-swatch" style="background:${hex}"></div>`).join("")}</div>`;
   }
 
-  function markerStrip(palette, reverse = false, className = "", withLabels = false) {
+  function markerStrip(palette, reverse = false, className = "") {
     const markers = [...palette.markers];
     if (reverse) markers.reverse();
-    return `<div class="front-swatch-row ${className}">${markers.map(marker => {
-      const label = withLabels
-        ? `<span class="back-marker-label" style="color:${readableText(marker.hex)}"><strong>${escapeHtml(marker.code)}</strong><span>${escapeHtml(marker.name || marker.code)}</span></span>`
-        : "";
-      return `<div class="front-swatch back-marker-strip-swatch" style="background:${marker.hex}">${label}</div>`;
-    }).join("")}</div>`;
+    return `<div class="front-swatch-row ${className}">${markers.map(marker => `<div class="front-swatch" style="background:${marker.hex}"></div>`).join("")}</div>`;
+  }
+
+  function backOriginalHalf(palette) {
+    const colours = palette.originals.map(originalHex).reverse();
+    return `<div class="back-half back-original-half">${colours.map(hex => `<div class="back-column" style="background:${hex}"></div>`).join("")}</div>`;
+  }
+
+  function backMarkerHalf(palette) {
+    const markers = [...palette.markers].reverse();
+    return `<div class="back-half back-marker-half">${markers.map(marker => `
+      <div class="back-column back-marker-column" style="background:${marker.hex}">
+        <span class="back-marker-label" style="color:${readableText(marker.hex)}">
+          <strong>${escapeHtml(marker.code)}</strong><span>${escapeHtml(marker.name || marker.code)}</span>
+        </span>
+      </div>`).join("")}</div>`;
   }
 
   renderPalettes = function renderCardsWithMirroredBacks() {
@@ -94,22 +104,26 @@
             </div>
           </div>
         </section>
-        <section class="card-face card-back" aria-label="Palette card back">
-          <div class="back-palette-pair" aria-label="Mirrored sampled and marker palette">
-            ${originalStrip(palette, true, "back-top-palette")}
-            ${markerStrip(palette, true, "back-marker-palette", true)}
-          </div>
-          <div class="back-card-spacer" aria-hidden="true"></div>
-          <div class="back-card-footer card-controls">
-            <button class="card-flip secondary-button" type="button"><i data-lucide="rotate-ccw"></i><span>Front</span></button>
-          </div>
+        <section class="card-face card-back" aria-label="Palette card back. Tap to show front." role="button" tabindex="0">
+          ${backOriginalHalf(palette)}
+          ${backMarkerHalf(palette)}
         </section>`;
 
-      article.querySelectorAll(".card-flip").forEach(button => {
-        button.addEventListener("click", () => {
-          article.dataset.face = article.dataset.face === "front" ? "back" : "front";
-        });
+      article.querySelector(".card-flip")?.addEventListener("click", () => {
+        article.dataset.face = "back";
       });
+
+      const backFace = article.querySelector(".card-back");
+      backFace?.addEventListener("click", () => {
+        article.dataset.face = "front";
+      });
+      backFace?.addEventListener("keydown", event => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          article.dataset.face = "front";
+        }
+      });
+
       article.querySelector(".card-remove")?.addEventListener("click", () => removePalette(palette.id));
       els.paletteGrid.appendChild(article);
     });
@@ -171,17 +185,11 @@
     const { paper } = selectedPaper();
     const layout = bestPaperLayout(paper);
     const duplexEdge = layout.orientation === "portrait" ? "long edge" : "short edge";
-    summary.textContent = `${layout.capacity} cards/sheet · 3.5 × 5 in · ${layout.orientation} · flip ${duplexEdge}`;
+    summary.textContent = `${layout.capacity} cards/sheet · 4 × 5 in · ${layout.orientation} · flip ${duplexEdge}`;
   }
 
-  function printStrip(items, key, labels = false) {
-    return `<div class="print-strip ${labels ? "print-marker-strip" : ""}">${items.map(item => {
-      const hex = item[key] || item;
-      const label = labels
-        ? `<span class="print-marker-label" style="color:${readableText(hex)}"><strong>${escapeHtml(item.code)}</strong><span>${escapeHtml(item.name || item.code)}</span></span>`
-        : "";
-      return `<div style="background:${hex}">${label}</div>`;
-    }).join("")}</div>`;
+  function printStrip(items, key) {
+    return `<div class="print-strip">${items.map(item => `<div style="background:${item[key] || item}"></div>`).join("")}</div>`;
   }
 
   function printFrontCard(palette) {
@@ -197,13 +205,16 @@
 
   function printBackCard(palette) {
     const pairs = palette.markers.map((marker, index) => ({ marker, original: originalHex(palette.originals[index]) })).reverse();
-    const reversedOriginals = pairs.map(pair => ({ hex: pair.original }));
-    const reversedMarkers = pairs.map(pair => pair.marker);
     return `
       <article class="print-card print-card-back">
-        <div class="print-back-palette-pair">
-          ${printStrip(reversedOriginals, "hex")}
-          ${printStrip(reversedMarkers, "hex", true)}
+        <div class="print-back-half print-back-original-half">
+          ${pairs.map(pair => `<div style="background:${pair.original}"></div>`).join("")}
+        </div>
+        <div class="print-back-half print-back-marker-half">
+          ${pairs.map(({ marker }) => `
+            <div class="print-back-marker-column" style="background:${marker.hex}">
+              <span class="print-marker-label" style="color:${readableText(marker.hex)}"><strong>${escapeHtml(marker.code)}</strong><span>${escapeHtml(marker.name || marker.code)}</span></span>
+            </div>`).join("")}
         </div>
       </article>`;
   }
@@ -286,7 +297,7 @@
   document.addEventListener("DOMContentLoaded", () => {
     injectPrintControls();
     const footer = document.querySelector(".app-footer p");
-    if (footer) footer.textContent = "Cards stay at a fixed 3.5 × 5 in size. Backs mirror the front colour order, with the sampled row and labelled marker row touching along the top. Choose a paper size and print double-sided at 100% / actual size using the flip edge shown beside the selector.";
+    if (footer) footer.textContent = "Cards are fixed at 4 × 5 in. The back is entirely colour: sampled colours fill the top half and mirrored marker colours fill the bottom half, with vertical Inter labels beginning at the centre seam. Print double-sided at 100% / actual size using the flip edge shown beside the paper selector.";
     renderPalettes();
   });
 })();
