@@ -1,23 +1,26 @@
 (() => {
   const KEY_STORAGE = "oahu-unsplash-access-key";
   const THRESHOLD_STORAGE = "oahu-match-threshold";
-  const MIGRATION_STORAGE = "oahu-source-first-pairing-v1";
+  const MIGRATION_STORAGE = "oahu-source-first-pairing-v2";
   const MIN_MATCH = 85;
-  const MAX_PAIR_DISTANCE = 0.07;
+  const MAX_PAIR_DISTANCE = 0.11;
+  const MIN_PAIR_SIMILARITY = 74;
 
   const EFFICIENT_SEARCHES = [
-    "minimalist still life", "modern kitchen interior", "linen bedroom", "spa interior", "coffee still life",
+    "muted still life", "pastel still life", "earth tone still life", "minimalist still life",
+    "modern neutral kitchen", "warm kitchen interior", "linen bedroom", "spa interior", "coffee still life",
     "bakery interior", "pastry still life", "fruit still life", "vegetable market", "flower bouquet",
-    "botanical garden", "greenhouse plants", "ceramic still life", "pottery studio", "art studio",
+    "botanical still life", "greenhouse plants", "ceramic still life", "pottery studio", "art studio",
     "sewing room", "bookstore interior", "cafe interior", "tea still life", "ice cream shop",
     "coastal landscape", "seaside village", "beach umbrellas", "ocean sunset", "mountain lake",
-    "forest path", "autumn leaves", "wildflower meadow", "country garden", "apple orchard",
+    "misty forest", "autumn leaves", "wildflower meadow", "country garden", "apple orchard",
     "farmhouse kitchen", "farmers market", "Mediterranean food", "sushi plate", "ramen bowl",
-    "pizza restaurant", "colourful architecture", "pastel houses", "vintage interior", "antique shop",
+    "pizza restaurant", "pastel architecture", "pastel houses", "vintage interior", "antique shop",
     "record store", "plant shop", "clothing boutique", "market stall", "sunlit room",
     "bathroom interior", "home office", "wood workshop", "Christmas interior", "pumpkin still life",
     "berry dessert", "macarons", "cocktail still life", "books and coffee", "painted pottery",
-    "desert landscape", "misty forest", "snowy cabin", "spring flowers", "tropical beach"
+    "desert landscape", "snowy cabin", "spring flowers", "tropical beach", "sage green interior",
+    "terracotta interior", "blue coastal interior", "pink flowers", "green botanical interior"
   ];
 
   if (Array.isArray(PHOTO_SUBJECTS)) {
@@ -52,17 +55,33 @@
     return `#${values.map(value => value.toString(16).padStart(2, "0").toUpperCase()).join("")}`;
   }
 
+  function chroma(lab) {
+    return Math.hypot(lab.a, lab.b);
+  }
+
+  function hueRadians(lab) {
+    return Math.atan2(lab.b, lab.a);
+  }
+
+  function hueDifference(a, b) {
+    let diff = Math.abs(hueRadians(a) - hueRadians(b));
+    if (diff > Math.PI) diff = Math.PI * 2 - diff;
+    return diff;
+  }
+
   function meaningfulColourCount(clusters) {
     const reps = [];
-    clusters.filter(cluster => cluster.weight >= .02).forEach(cluster => {
-      if (reps.every(existing => oklabDistance(existing.lab, cluster.lab) > .05)) reps.push(cluster);
+    clusters.filter(cluster => cluster.weight >= .018).forEach(cluster => {
+      if (reps.every(existing => oklabDistance(existing.lab, cluster.lab) > .052)) reps.push(cluster);
     });
     return reps.length;
   }
 
   function sixColourComplexity(clusters) {
     const anchors = clusters.slice(0, 6);
-    if (anchors.length < 6) return { reject: true, dominantCoverage: 0, outlierMass: 1, compressionError: 1, distinctCount: 0 };
+    if (anchors.length < 6) {
+      return { reject: true, dominantCoverage: 0, outlierMass: 1, compressionError: 1, distinctCount: 0 };
+    }
 
     const dominantCoverage = anchors.reduce((sum, cluster) => sum + cluster.weight, 0);
     let outlierMass = 0;
@@ -71,20 +90,20 @@
     clusters.forEach(cluster => {
       const nearest = Math.min(...anchors.map(anchor => oklabDistance(cluster.lab, anchor.lab)));
       compressionError += nearest * cluster.weight;
-      if (nearest > .065) outlierMass += cluster.weight;
+      if (nearest > .078) outlierMass += cluster.weight;
     });
 
     const distinctCount = meaningfulColourCount(clusters);
-    const reject = outlierMass > .22
-      || compressionError > .068
-      || dominantCoverage < .62
-      || (distinctCount > 9 && outlierMass > .12);
+    const reject = dominantCoverage < .50
+      || outlierMass > .36
+      || compressionError > .105
+      || (distinctCount > 12 && outlierMass > .22);
 
     return { reject, dominantCoverage, outlierMass, compressionError, distinctCount };
   }
 
   function selectSourceColours(clusters, count) {
-    const pool = clusters.filter(cluster => cluster.weight >= .008).slice(0, 14);
+    const pool = clusters.filter(cluster => cluster.weight >= .006).slice(0, 18);
     const selected = [];
 
     while (selected.length < count && pool.length) {
@@ -92,20 +111,20 @@
       let bestScore = -Infinity;
 
       pool.forEach((cluster, index) => {
-        const chroma = Math.hypot(cluster.lab.a, cluster.lab.b);
+        const clusterChroma = chroma(cluster.lab);
         const separation = selected.length
           ? Math.min(...selected.map(chosen => oklabDistance(chosen.lab, cluster.lab)))
-          : .12;
+          : .13;
         const tonalSeparation = selected.length
           ? Math.min(...selected.map(chosen => Math.abs(chosen.lab.L - cluster.lab.L)))
-          : .12;
-        const accentBoost = cluster.weight >= .02 ? Math.min(chroma, .18) * .75 : 0;
-        const score = cluster.weight * 3.6
-          + Math.min(separation, .2) * 1.8
-          + Math.min(tonalSeparation, .2) * .3
+          : .13;
+        const accentBoost = cluster.weight >= .012 ? Math.min(clusterChroma, .19) * 1.15 : 0;
+        const score = cluster.weight * 3.0
+          + Math.min(separation, .22) * 1.7
+          + Math.min(tonalSeparation, .22) * .25
           + accentBoost;
 
-        if (selected.length && separation < .032) return;
+        if (selected.length && separation < .025) return;
         if (score > bestScore) {
           bestScore = score;
           bestIndex = index;
@@ -119,19 +138,36 @@
     if (selected.length < count) {
       for (const cluster of pool) {
         if (selected.length >= count) break;
-        if (selected.every(chosen => oklabDistance(chosen.lab, cluster.lab) >= .025)) selected.push(cluster);
+        if (selected.every(chosen => oklabDistance(chosen.lab, cluster.lab) >= .021)) selected.push(cluster);
       }
     }
 
     return selected.slice(0, count);
   }
 
+  function markerLooksPlausible(sourceLab, markerLab, distance) {
+    if (distance > MAX_PAIR_DISTANCE) return false;
+
+    const sourceChroma = chroma(sourceLab);
+    const markerChroma = chroma(markerLab);
+
+    if (sourceChroma < .035 && markerChroma > .07 && distance > .035) return false;
+    if (sourceChroma > .08 && markerChroma < .025 && distance > .045) return false;
+
+    if (sourceChroma >= .04 && markerChroma >= .025) {
+      const hueDiff = hueDifference(sourceLab, markerLab);
+      if (hueDiff > .95 && distance > .05) return false;
+    }
+
+    return true;
+  }
+
   function assignUniqueMarkers(sourceColours) {
     const options = sourceColours.map(source => state.markers
       .map(marker => ({ marker, distance: oklabDistance(source.lab, marker.oklab) }))
-      .filter(option => option.distance <= MAX_PAIR_DISTANCE)
+      .filter(option => markerLooksPlausible(source.lab, option.marker.oklab, option.distance))
       .sort((a, b) => a.distance - b.distance)
-      .slice(0, 6));
+      .slice(0, 12));
 
     if (options.some(list => !list.length)) return null;
 
@@ -158,7 +194,7 @@
         if (used.has(option.marker.code)) continue;
         used.add(option.marker.code);
         assignment[sourceIndex] = option;
-        visit(depth + 1, cost + option.distance * Math.max(source.weight, .02));
+        visit(depth + 1, cost + option.distance * Math.max(source.weight, .015));
         used.delete(option.marker.code);
       }
     }
@@ -167,11 +203,15 @@
     return best;
   }
 
+  function pairSimilarity(distance) {
+    return clamp(100 * (1 - distance / .40), 0, 100);
+  }
+
   sourcePhotos = async function sourcePhotosEfficiently(subject) {
     const accessKey = (localStorage.getItem(KEY_STORAGE) || "").trim();
     if (!accessKey) return [];
 
-    const page = 1 + Math.floor(Math.random() * 3);
+    const page = 1 + Math.floor(Math.random() * 2);
     const params = new URLSearchParams({
       query: subject,
       page: String(page),
@@ -227,17 +267,17 @@
     const pairs = sourceColours.map((source, index) => ({
       source,
       marker: assignments[index].marker,
-      distance: assignments[index].distance
+      distance: assignments[index].distance,
+      similarity: pairSimilarity(assignments[index].distance)
     })).sort((a, b) => a.source.lab.L - b.source.lab.L);
 
-    if (pairs.some(pair => pair.distance > MAX_PAIR_DISTANCE)) return null;
+    if (pairs.some(pair => pair.similarity < MIN_PAIR_SIMILARITY)) return null;
 
-    const weightTotal = pairs.reduce((sum, pair) => sum + pair.source.weight, 0) || 1;
-    const weightedPairDistance = pairs.reduce((sum, pair) => sum + pair.distance * pair.source.weight, 0) / weightTotal;
-    const pairScore = clamp(100 * (1 - weightedPairDistance / .09), 0, 100);
-    const compressionScore = clamp(100 * (1 - complexity.compressionError / .075), 0, 100);
-    const coverageScore = clamp(complexity.dominantCoverage * 100, 0, 100);
-    const score = pairScore * .62 + compressionScore * .18 + coverageScore * .20;
+    const weightTotal = pairs.reduce((sum, pair) => sum + Math.max(pair.source.weight, .015), 0) || 1;
+    const score = pairs.reduce(
+      (sum, pair) => sum + pair.similarity * Math.max(pair.source.weight, .015),
+      0
+    ) / weightTotal;
 
     if (score < getThreshold()) return null;
 
@@ -260,7 +300,7 @@
     const target = Number(els.targetCount.value || 24);
     const startingCount = state.palettes.length;
     const goalCount = startingCount + target;
-    const maxAttempts = Math.max(target * 28, 180);
+    const maxAttempts = Math.max(target * 24, 160);
     state.stopRequested = false;
     state.attempts = 0;
     state.rejected = 0;
@@ -283,7 +323,7 @@
         }
 
         shuffle(photos);
-        for (const photo of photos.slice(0, 12)) {
+        for (const photo of photos.slice(0, 18)) {
           if (state.stopRequested || state.palettes.length >= goalCount || state.attempts >= maxAttempts) break;
           if (state.usedPhotoIds.has(String(photo.id))) continue;
           state.attempts += 1;
@@ -306,7 +346,11 @@
               creator: photo.creator || "Unknown creator",
               licence: photo.licence || "See source",
               score: Math.round(analysis.score),
-              markers: analysis.markers.map(marker => ({ code: marker.code, name: marker.name || marker.code, hex: marker.hex })),
+              markers: analysis.markers.map(marker => ({
+                code: marker.code,
+                name: marker.name || marker.code,
+                hex: marker.hex
+              })),
               originals: analysis.originals,
               complexity: analysis.complexity,
               createdAt: Date.now()
@@ -330,7 +374,7 @@
 
       const made = state.palettes.length - startingCount;
       if (state.stopRequested) showToast(`Stopped after ${made} palette${made === 1 ? "" : "s"}.`);
-      else if (made < target) showToast(`Created ${made} strong palettes before the quality limit was reached.`);
+      else if (made < target) showToast(`Created ${made} palettes before the search limit was reached.`);
       else showToast(`Created ${made} photo palettes.`);
     } finally {
       updateProgress(startingCount, goalCount, "Complete");
@@ -348,7 +392,7 @@
     state.usedPhotoIds.clear();
     persistPalettes();
     renderPalettes();
-    showToast("Old cards cleared so the corrected colour pairing can be regenerated.");
+    showToast("Old cards cleared so the corrected matching can be regenerated.");
   }
 
   document.addEventListener("DOMContentLoaded", () => {
