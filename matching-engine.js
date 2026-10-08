@@ -44,45 +44,113 @@
     return `#${values.map(value => value.toString(16).padStart(2, "0").toUpperCase()).join("")}`;
   }
 
+  function prominence(cluster, clusters) {
+    const clusterChroma = chroma(cluster.lab);
+    const highestWeight = Math.max(...clusters.map(item => item.weight), cluster.weight, .001);
+    const maxChroma = Math.max(.001, ...clusters.map(item => chroma(item.lab)));
+    const coverage = Math.min(cluster.weight / highestWeight, 1);
+    const saturation = Math.min(clusterChroma / maxChroma, 1);
+    const contrast = Math.min(Math.max(...clusters.map(item => oklabDistance(item.lab, cluster.lab))), .28) / .28;
+    const accentBoost = cluster.weight >= .004 && clusterChroma >= .048 ? .18 : 0;
+    return coverage * .56 + saturation * .22 + contrast * .22 + accentBoost;
+  }
+
+  function sortByProminence(clusters) {
+    return clusters
+      .filter(cluster => cluster.weight >= .003)
+      .map(cluster => ({ ...cluster, prominence: prominence(cluster, clusters) }))
+      .sort((a, b) => b.prominence - a.prominence || b.weight - a.weight);
+  }
+
   function chooseSixSourceColours(clusters) {
-    const pool = clusters.filter(cluster => cluster.weight >= .006).slice(0, 16);
+    const pool = sortByProminence(clusters).slice(0, 20);
+    if (pool.length < 6) return [];
+
     const selected = [];
+    const remaining = [...pool];
 
-    while (selected.length < 6 && pool.length) {
-      let bestIndex = -1;
-      let bestScore = -Infinity;
-
-      pool.forEach((cluster, index) => {
-        const separation = selected.length
-          ? Math.min(...selected.map(chosen => oklabDistance(chosen.lab, cluster.lab)))
-          : .14;
-        const tonal = selected.length
-          ? Math.min(...selected.map(chosen => Math.abs(chosen.lab.L - cluster.lab.L)))
-          : .14;
-        const sourceChroma = chroma(cluster.lab);
-        const colourfulAccent = sourceChroma >= .05 && cluster.weight >= .012
-          ? Math.min(sourceChroma, .18) * .48
-          : 0;
-        const score = cluster.weight * 4.5
-          + Math.min(separation, .20) * 1.15
-          + Math.min(tonal, .20) * .16
-          + colourfulAccent;
-
-        if (selected.length && separation < .022) return;
-        if (score > bestScore) {
-          bestScore = score;
-          bestIndex = index;
-        }
-      });
-
-      if (bestIndex < 0) break;
-      selected.push(pool.splice(bestIndex, 1)[0]);
+    function separationFromSelected(cluster) {
+      return selected.length
+        ? Math.min(...selected.map(chosen => oklabDistance(chosen.lab, cluster.lab)))
+        : .24;
     }
 
-    for (const cluster of pool) {
+    function takeBest(scoreFor, minimumSeparation, limit) {
+      let taken = 0;
+      while (taken < limit && selected.length < 6) {
+        let bestIndex = -1;
+        let bestScore = -Infinity;
+
+        remaining.forEach((cluster, index) => {
+          const separation = separationFromSelected(cluster);
+          if (separation < minimumSeparation) return;
+          const score = scoreFor(cluster, separation);
+          if (score > bestScore) {
+            bestScore = score;
+            bestIndex = index;
+          }
+        });
+
+        if (bestIndex < 0) break;
+        selected.push(remaining.splice(bestIndex, 1)[0]);
+        taken += 1;
+      }
+    }
+
+    // Build the backbone from colours that carry a meaningful share of the image.
+    takeBest((cluster, separation) => {
+      const tonal = selected.length
+        ? Math.min(...selected.map(chosen => Math.abs(chosen.lab.L - cluster.lab.L)))
+        : .18;
+      return cluster.prominence * 3.0
+        + Math.min(separation, .24) * 1.3
+        + Math.min(tonal, .18) * .25;
+    }, .043, 4);
+
+    // Reserve up to two slots for small, conspicuous accents. This is what lets a
+    // small red tag, blue label, flower, etc. survive against a large neutral field.
+    const accents = remaining
+      .filter(cluster => cluster.weight >= .003 && chroma(cluster.lab) >= .052)
+      .map(cluster => {
+        const separation = separationFromSelected(cluster);
+        const localContrast = Math.min(
+          Math.max(...clusters.map(other => oklabDistance(cluster.lab, other.lab))),
+          .28
+        ) / .28;
+        const accentScore = Math.min(chroma(cluster.lab) / .18, 1) * .46
+          + localContrast * .34
+          + Math.min(cluster.weight / .03, 1) * .20
+          + Math.min(separation, .22) * .65;
+        return { cluster, separation, accentScore };
+      })
+      .filter(item => item.separation >= .052)
+      .sort((a, b) => b.accentScore - a.accentScore);
+
+    for (const item of accents) {
       if (selected.length >= 6) break;
-      if (selected.every(chosen => oklabDistance(chosen.lab, cluster.lab) >= .018)) selected.push(cluster);
+      const index = remaining.indexOf(item.cluster);
+      if (index < 0) continue;
+      if (separationFromSelected(item.cluster) < .052) continue;
+      selected.push(item.cluster);
+      remaining.splice(index, 1);
     }
+
+    // Fill any unclaimed slots with the strongest distinct colours left.
+    takeBest((cluster, separation) =>
+      cluster.prominence * 2.8 + Math.min(separation, .24) * 1.6,
+    .048, 6);
+
+    if (selected.length !== 6) return [];
+
+    // If we ended up with too many near-duplicates, fail and let the photo be skipped.
+    const tooSimilarPairs = [];
+    for (let i = 0; i < selected.length; i++) {
+      for (let j = i + 1; j < selected.length; j++) {
+        const distance = oklabDistance(selected[i].lab, selected[j].lab);
+        if (distance < .045) tooSimilarPairs.push(distance);
+      }
+    }
+    if (tooSimilarPairs.length > 1) return [];
 
     return selected.slice(0, 6);
   }
@@ -91,6 +159,7 @@
     if (selected.length !== 6) return false;
 
     const selectedCoverage = selected.reduce((sum, cluster) => sum + cluster.weight, 0);
+    const vividAccentCount = selected.filter(cluster => chroma(cluster.lab) >= .055).length;
     let farMass = 0;
     let compressionError = 0;
 
@@ -100,9 +169,15 @@
       if (nearest > .12) farMass += cluster.weight;
     });
 
-    if (selectedCoverage < .34 && farMass > .48) return false;
-    if (farMass > .56) return false;
-    if (compressionError > .145) return false;
+    if (selectedCoverage < .33 && farMass > .46) return false;
+    if (farMass > .54) return false;
+    if (compressionError > .142) return false;
+
+    // Prevent six nearly identical neutrals from passing when a more colourful
+    // image clearly contains meaningful accent colours.
+    const imageHasAccent = clusters.some(cluster => chroma(cluster.lab) >= .065 && cluster.weight >= .006);
+    if (imageHasAccent && vividAccentCount === 0) return false;
+
     return true;
   }
 
@@ -111,8 +186,6 @@
     const markerChroma = chroma(markerLab);
     const chromaGap = Math.abs(sourceChroma - markerChroma);
 
-    // True neutrals should stay neutral. This prevents white/grey source colours
-    // from being filled out with visibly cyan, peach, green, or purple markers.
     if (sourceChroma <= .03) {
       const allowedMarkerChroma = sourceLab.L >= .74
         ? Math.max(.033, sourceChroma + .020)
@@ -122,7 +195,6 @@
       return true;
     }
 
-    // Soft tints may use neutral-adjacent markers, but not a clearly different tint.
     if (sourceChroma <= .055) {
       if (markerChroma > .080) return false;
       if (markerChroma > .032 && hueDiff(sourceLab, markerLab) > 1.00) return false;
@@ -130,8 +202,6 @@
       return true;
     }
 
-    // Once the source colour is visibly chromatic, preserve its hue family first.
-    // Stronger colours get a tighter hue window.
     if (markerChroma < .025) return false;
     const maxHueDifference = sourceChroma >= .11 ? .66 : .86;
     if (hueDiff(sourceLab, markerLab) > maxHueDifference) return false;
@@ -147,7 +217,6 @@
     let penalty = 0;
 
     if (sourceChroma <= .03) {
-      // Within the neutral-safe pool, favour the least tinted marker.
       penalty += Math.max(0, markerChroma - sourceChroma) * .45;
     } else if (sourceChroma <= .055) {
       if (markerChroma > .03) penalty += hueDiff(sourceLab, markerLab) * .025;
@@ -184,8 +253,6 @@
     const candidates = sourceColours.map(candidateMarkersFor);
     if (candidates.some(list => list.length === 0)) return null;
 
-    // Solve the most constrained source colours first. That prevents a flexible
-    // neutral from taking the only good marker available to a harder colour.
     const order = candidates
       .map((list, index) => ({
         index,
@@ -230,7 +297,6 @@
     let similarity = 100 - pair.distance * 100;
 
     if (sourceChroma <= .03) {
-      // Tint shifts in near-neutrals are visually obvious even when OKLab distance is small.
       similarity -= Math.max(0, markerChroma - sourceChroma - .008) * 160;
     } else if (sourceChroma <= .055) {
       similarity -= chromaGap * 32;
@@ -250,14 +316,12 @@
     const samples = sampleImage(image, 92);
     if (samples.length < 250) return null;
 
-    const clusters = kMeans(samples, 12, 8);
+    const clusters = kMeans(samples, 18, 10);
     if (clusters.length < 6) return null;
 
     const sourceColours = chooseSixSourceColours(clusters);
     if (sourceColours.length !== 6 || !imageFitsSixColours(clusters, sourceColours)) return null;
 
-    // If six perceptually plausible unique marker matches do not exist, reject
-    // the photo rather than inventing a sixth colour from the wrong family.
     const assignment = assignUniqueMarkers(sourceColours);
     if (!assignment) return null;
 
@@ -270,10 +334,19 @@
       chromaDifference: assignment[index].chromaDifference
     })).sort((a, b) => a.source.lab.L - b.source.lab.L);
 
+    // Six unique codes are not enough if two marker swatches still look effectively
+    // identical. Reject collapsed palettes so every slot carries useful information.
+    for (let i = 0; i < pairs.length; i++) {
+      for (let j = i + 1; j < pairs.length; j++) {
+        const markerDistance = oklabDistance(pairs[i].marker.oklab, pairs[j].marker.oklab);
+        const sourceDistance = oklabDistance(pairs[i].source.lab, pairs[j].source.lab);
+        if (markerDistance < .032 && sourceDistance >= .052) return null;
+      }
+    }
+
     const similarities = pairs.map(perceptualSimilarity);
     const minimumPairScore = Math.max(78, threshold() - 8);
 
-    // Do not hide one visibly bad pair inside a strong average.
     if (similarities.some(value => value < minimumPairScore)) return null;
 
     const score = similarities.reduce((sum, value) => sum + value, 0) / similarities.length;
